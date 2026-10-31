@@ -1,19 +1,413 @@
-
-/* ==========================================
+/* ============================================
    QR PIEDRAS NATURALES
-   PAGOS - REPORTES Y ESTADISTICAS
-   ========================================== */
+   MODULO PAGOS - DISEÑO COMPLETO
+   ============================================ */
+
+.qp-pagos,
+.qp-pagos *,
+.qp-pagos *::before,
+.qp-pagos *::after {
+  box-sizing: border-box;
+}
+
+.qp-pagos {
+  --qp-fondo: #101114;
+  --qp-panel: #1b1d21;
+  --qp-panel-claro: #24262b;
+  --qp-dorado: #d4af67;
+  --qp-borde: #39342b;
+  --qp-texto: #f5f5f5;
+  --qp-secundario: #aeb1b8;
+
+  width: 100%;
+  min-height: 100vh;
+  background: var(--qp-fondo);
+  color: var(--qp-texto);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  padding: 30px;
+}
+
+.qp-contenedor {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.qp-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-bottom: 25px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid var(--qp-borde);
+}
+
+.qp-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--qp-dorado);
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.qp-volver:hover {
+  text-decoration: underline;
+}
+
+.qp-etiqueta {
+  color: var(--qp-dorado);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0 0 10px;
+}
+
+.qp-cabecera h1 {
+  color: var(--qp-texto);
+  font-size: clamp(26px, 3vw, 34px);
+  margin: 0 0 10px;
+}
+
+.qp-subtitulo {
+  color: var(--qp-secundario);
+  margin: 0;
+  font-size: 14px;
+}
+
+.qp-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px 18px;
+  min-height: 43px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+  white-space: nowrap;
+}
+
+.qp-boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qp-primario {
+  background: var(--qp-dorado);
+  color: #151515;
+}
+
+.qp-primario:hover:not(:disabled) {
+  background: #e8c783;
+}
+
+.qp-secundario {
+  background: var(--qp-panel-claro);
+  border-color: var(--qp-borde);
+  color: var(--qp-texto);
+}
+
+.qp-secundario:hover:not(:disabled) {
+  border-color: var(--qp-dorado);
+}
+
+.qp-aviso {
+  padding: 14px 16px;
+  border: 1px solid #51442d;
+  border-radius: 9px;
+  background: #29251e;
+  color: #f5d083;
+  margin-bottom: 20px;
+}
+
+/* INDICADORES */
+
+.qp-indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.qp-indicador {
+  min-width: 0;
+  background: var(--qp-panel);
+  border: 1px solid var(--qp-borde);
+  border-radius: 13px;
+  padding: 22px;
+}
+
+.qp-indicador > span:first-child {
+  display: block;
+  color: var(--qp-secundario);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.qp-indicador strong {
+  display: block;
+  color: var(--qp-texto);
+  font-size: 25px;
+  overflow-wrap: anywhere;
+}
+
+.qp-dato-extra {
+  display: block;
+  color: var(--qp-dorado);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+/* PANELES */
+
+.qp-columnas {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.5fr);
+  gap: 20px;
+  margin-bottom: 22px;
+  align-items: start;
+}
+
+.qp-panel {
+  min-width: 0;
+  background: var(--qp-panel);
+  border: 1px solid var(--qp-borde);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.qp-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--qp-dorado);
+  margin-bottom: 22px;
+}
+
+.qp-titulo h2 {
+  margin: 0;
+  font-size: 19px;
+  color: var(--qp-texto);
+}
+
+.qp-nota {
+  color: var(--qp-secundario);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* FORMULARIO */
+
+.qp-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.qp-pagos label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--qp-secundario);
+}
+
+.qp-pagos input,
+.qp-pagos select {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  background: #121417;
+  border: 1px solid #42454b;
+  border-radius: 8px;
+  color: var(--qp-texto);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.qp-pagos input:focus,
+.qp-pagos select:focus {
+  border-color: var(--qp-dorado);
+}
+
+.qp-pagos input::placeholder {
+  color: #777b84;
+}
+
+.qp-pagos select option {
+  background: #1b1d21;
+  color: #f5f5f5;
+}
+
+.qp-dos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.qp-saldo {
+  background: rgba(212, 175, 103, 0.08);
+  border: 1px solid rgba(212, 175, 103, 0.25);
+  border-radius: 9px;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.qp-saldo span {
+  color: var(--qp-secundario);
+}
+
+.qp-saldo strong {
+  color: var(--qp-dorado);
+  font-size: 18px;
+}
+
+/* BUSQUEDA Y FILTROS */
+
+.qp-busqueda {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #121417;
+  border: 1px solid #42454b;
+  border-radius: 9px;
+  padding: 0 12px;
+  color: var(--qp-dorado);
+  margin-bottom: 15px;
+}
+
+.qp-busqueda input {
+  border: none;
+  background: transparent;
+  padding-left: 0;
+}
+
+.qp-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.qp-filtros button {
+  border: 1px solid var(--qp-borde);
+  background: var(--qp-panel-claro);
+  color: var(--qp-secundario);
+  padding: 9px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.qp-filtros button.activo {
+  background: rgba(212, 175, 103, 0.13);
+  border-color: var(--qp-dorado);
+  color: var(--qp-dorado);
+}
+
+/* TABLAS */
+
+.qp-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.qp-pagos table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.qp-pagos th {
+  color: var(--qp-dorado);
+  background: #17191d;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--qp-borde);
+  white-space: nowrap;
+}
+
+.qp-pagos td {
+  color: var(--qp-texto);
+  padding: 15px 12px;
+  border-bottom: 1px solid #303238;
+  vertical-align: middle;
+}
+
+.qp-pagos td strong {
+  font-weight: 700;
+}
+
+.qp-pagos td small {
+  display: block;
+  margin-top: 6px;
+  color: var(--qp-secundario);
+  font-size: 11px;
+}
+
+.qp-pagos tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.qp-vacio {
+  text-align: center;
+  color: var(--qp-secundario) !important;
+  padding: 28px !important;
+}
+
+.qp-enlace {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(212, 175, 103, 0.35);
+  background: rgba(212, 175, 103, 0.09);
+  color: var(--qp-dorado);
+  border-radius: 7px;
+  padding: 8px 11px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.qp-enlace:hover {
+  background: rgba(212, 175, 103, 0.18);
+}
+
+/* REPORTES */
 
 .qp-reportes {
   margin-bottom: 22px;
 }
 
-.qp-reporte-acciones {
+.qp-fechas {
   display: flex;
-  align-items: center;
+  align-items: end;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: 20px 0;
+  gap: 15px;
+  margin-top: 18px;
+}
+
+.qp-fechas > label {
+  flex: 1 1 180px;
+  max-width: 260px;
 }
 
 .qp-pagos .qp-check {
@@ -21,42 +415,48 @@
   flex-direction: row;
   align-items: center;
   gap: 9px;
+  flex: 1 1 200px;
   cursor: pointer;
+  padding-bottom: 12px;
 }
 
 .qp-pagos .qp-check input {
   width: 17px;
   height: 17px;
-  accent-color: #d4af67;
+  min-height: 17px;
+  accent-color: var(--qp-dorado);
+}
+
+.qp-reporte-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 22px 0;
 }
 
 .qp-reporte-resumen {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(190px, 1fr)
-  );
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 14px;
   margin-bottom: 22px;
 }
 
 .qp-reporte-metrica {
-  background: #24262b;
-  border: 1px solid #39342b;
+  background: var(--qp-panel-claro);
+  border: 1px solid var(--qp-borde);
   border-radius: 12px;
   padding: 18px;
 }
 
 .qp-reporte-metrica span {
   display: block;
-  color: #aeb1b8;
+  color: var(--qp-secundario);
   font-size: 12px;
   margin-bottom: 10px;
 }
 
 .qp-reporte-metrica strong {
-  display: block;
-  color: #f5f5f5;
+  color: var(--qp-texto);
   font-size: 21px;
   overflow-wrap: anywhere;
 }
@@ -68,15 +468,15 @@
 }
 
 .qp-reporte-bloque {
+  min-width: 0;
   background: #17191d;
-  border: 1px solid #39342b;
+  border: 1px solid var(--qp-borde);
   border-radius: 12px;
   padding: 20px;
-  min-width: 0;
 }
 
 .qp-reporte-bloque h3 {
-  color: #f5f5f5;
+  color: var(--qp-texto);
   font-size: 15px;
   margin: 0 0 20px;
 }
@@ -96,7 +496,7 @@
 }
 
 .qp-barra-label strong {
-  color: #d4af67;
+  color: var(--qp-dorado);
 }
 
 .qp-barra-fondo {
@@ -109,46 +509,64 @@
 
 .qp-barra-fondo > div {
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    #9c7b42,
-    #d4af67
-  );
+  background: linear-gradient(90deg, #9c7b42, #d4af67);
   border-radius: 10px;
   transition: width 0.3s ease;
 }
 
-.qp-dato-extra {
-  display: block;
-  color: #d4af67;
-  font-size: 12px;
-  margin-top: 12px;
+.qp-historial {
+  margin-bottom: 30px;
 }
 
-.qp-aviso {
-  padding: 14px 16px;
-  border: 1px solid #51442d;
-  border-radius: 9px;
-  background: #29251e;
-  color: #f5d083;
-  margin-bottom: 18px;
+/* RESPONSIVE */
+
+@media (max-width: 1050px) {
+  .qp-columnas {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 800px) {
+  .qp-pagos {
+    padding: 20px;
+  }
+
   .qp-reporte-grid {
     grid-template-columns: 1fr;
   }
 
   .qp-reporte-acciones {
     flex-direction: column;
-    align-items: stretch;
   }
 
   .qp-reporte-acciones .qp-boton {
     width: 100%;
   }
+}
 
-  .qp-reporte-metrica strong {
-    font-size: 18px;
+@media (max-width: 520px) {
+  .qp-pagos {
+    padding: 14px;
+  }
+
+  .qp-panel {
+    padding: 16px;
+  }
+
+  .qp-dos {
+    grid-template-columns: 1fr;
+  }
+
+  .qp-indicadores {
+    grid-template-columns: 1fr;
+  }
+
+  .qp-cabecera h1 {
+    font-size: 26px;
+  }
+
+  .qp-saldo {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
