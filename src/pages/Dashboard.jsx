@@ -19,6 +19,7 @@ import {
 import Clientes from "./Clientes";
 import Cotizaciones from "./Cotizaciones";
 import Ventas from "./Ventas";
+import Pagos from "./Pagos";
 
 // =====================================================
 // MÓDULOS EMPRESARIALES
@@ -58,7 +59,7 @@ const MODULOS = [
     nombre: "Pagos",
     descripcion: "Control de pagos, adelantos y saldos.",
     icono: Wallet,
-    disponible: false,
+    disponible: true,
   },
   {
     id: "contratos",
@@ -114,6 +115,10 @@ export default function Dashboard({ perfil, onLogout }) {
 
   if (modulo === "ventas") {
     return <Ventas onVolver={() => navegar("inicio")} />;
+  }
+
+  if (modulo === "pagos") {
+    return <Pagos perfil={perfil} onVolver={() => navegar("inicio")} />;
   }
 
   const moduloActual = MODULOS.find((item) => item.id === modulo);
