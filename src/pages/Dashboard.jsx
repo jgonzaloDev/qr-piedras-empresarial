@@ -1,7 +1,5 @@
 import { useState } from "react";
 
-import Ventas from "./Ventas";
-
 import {
   LayoutDashboard,
   Users,
@@ -20,6 +18,11 @@ import {
 
 import Clientes from "./Clientes";
 import Cotizaciones from "./Cotizaciones";
+import Ventas from "./Ventas";
+
+// =====================================================
+// MÓDULOS EMPRESARIALES
+// =====================================================
 
 const MODULOS = [
   {
@@ -66,6 +69,10 @@ const MODULOS = [
   },
 ];
 
+// =====================================================
+// COLORES DEL SISTEMA
+// =====================================================
+
 const COLORES = {
   fondo: "#101114",
   panel: "#1b1d21",
@@ -76,6 +83,10 @@ const COLORES = {
   secundario: "#aeb1b8",
   borde: "#39342b",
 };
+
+// =====================================================
+// DASHBOARD PRINCIPAL
+// =====================================================
 
 export default function Dashboard({ perfil, onLogout }) {
   const [modulo, setModulo] = useState("inicio");
@@ -88,6 +99,10 @@ export default function Dashboard({ perfil, onLogout }) {
     setModulo(destino);
     setMenuAbierto(false);
   }
+
+  // ===================================================
+  // NAVEGACIÓN A LOS MÓDULOS
+  // ===================================================
 
   if (modulo === "clientes") {
     return <Clientes perfil={perfil} onVolver={() => navegar("inicio")} />;
@@ -102,6 +117,10 @@ export default function Dashboard({ perfil, onLogout }) {
   }
 
   const moduloActual = MODULOS.find((item) => item.id === modulo);
+
+  // ===================================================
+  // ESTILO DE LOS BOTONES DEL MENÚ
+  // ===================================================
 
   const estiloBotonMenu = (activo) => ({
     width: "100%",
@@ -121,36 +140,71 @@ export default function Dashboard({ perfil, onLogout }) {
     cursor: "pointer",
   });
 
+  // ===================================================
+  // INTERFAZ
+  // ===================================================
+
   return (
     <div className="qr-dashboard">
       <style>{`
-        * {
+
+        /* ============================================
+           CONFIGURACIÓN GLOBAL DEL DASHBOARD
+           ============================================ */
+
+        .qr-dashboard,
+        .qr-dashboard *,
+        .qr-dashboard *::before,
+        .qr-dashboard *::after {
           box-sizing: border-box;
         }
 
-        body {
-          margin: 0;
-        }
-
         .qr-dashboard {
+          width: 100%;
+          max-width: none;
+          min-width: 0;
           min-height: 100vh;
+          min-height: 100svh;
+
+          margin: 0;
+          padding: 0;
+
           display: flex;
+          flex: 1 0 auto;
+          align-items: stretch;
+
           background: ${COLORES.fondo};
           color: ${COLORES.blanco};
+
           font-family: Arial, Helvetica, sans-serif;
         }
+
+        /* ============================================
+           MENÚ LATERAL
+           ============================================ */
 
         .qr-sidebar {
           width: 265px;
           min-width: 265px;
+          flex: 0 0 265px;
+
           min-height: 100vh;
+
           background: ${COLORES.panel};
+
           border-right: 1px solid ${COLORES.borde};
+
           padding: 28px 18px;
+
           display: flex;
           flex-direction: column;
+
           gap: 25px;
         }
+
+        /* ============================================
+           LOGOTIPO
+           ============================================ */
 
         .qr-logo {
           padding: 10px 12px 20px;
@@ -159,23 +213,35 @@ export default function Dashboard({ perfil, onLogout }) {
 
         .qr-logo h1 {
           margin: 0;
+
           color: ${COLORES.dorado};
+
           font-size: 25px;
+          font-weight: 700;
           letter-spacing: 1px;
         }
 
         .qr-logo p {
           margin: 8px 0 0;
+
           color: ${COLORES.secundario};
+
           font-size: 12px;
           line-height: 1.6;
         }
 
+        /* ============================================
+           NAVEGACIÓN
+           ============================================ */
+
         .qr-menu-label {
           color: #777b84;
+
           font-size: 11px;
           font-weight: bold;
+
           letter-spacing: 1.5px;
+
           padding: 0 14px;
           margin-bottom: 12px;
         }
@@ -186,39 +252,72 @@ export default function Dashboard({ perfil, onLogout }) {
           gap: 5px;
         }
 
+        /* ============================================
+           CONTENIDO PRINCIPAL
+           PANTALLA COMPLETA
+           ============================================ */
+
         .qr-main {
-          flex: 1;
+          flex: 1 1 0%;
+
+          width: 100%;
           min-width: 0;
+          max-width: none;
+
+          margin: 0;
           padding: 30px 36px;
+
+          background: ${COLORES.fondo};
         }
 
+        /* ============================================
+           BARRA SUPERIOR
+           ============================================ */
+
         .qr-topbar {
+          width: 100%;
+
           display: flex;
           justify-content: space-between;
           align-items: center;
+
           gap: 16px;
+
           padding-bottom: 25px;
+
           border-bottom: 1px solid ${COLORES.borde};
         }
 
         .qr-topbar h2 {
           font-size: 22px;
+
           margin: 0 0 7px;
+
           color: ${COLORES.blanco};
         }
 
         .qr-topbar p {
           margin: 0;
+
           color: ${COLORES.secundario};
+
           font-size: 13px;
         }
+
+        /* ============================================
+           USUARIO ADMINISTRADOR
+           ============================================ */
 
         .qr-user {
           display: flex;
           align-items: center;
+
           gap: 13px;
+
           background: ${COLORES.panel};
+
           padding: 10px 15px;
+
           border: 1px solid ${COLORES.borde};
           border-radius: 12px;
         }
@@ -226,23 +325,34 @@ export default function Dashboard({ perfil, onLogout }) {
         .qr-avatar {
           width: 38px;
           height: 38px;
+
           border-radius: 50%;
+
           background: rgba(212,175,103,0.15);
           color: ${COLORES.dorado};
+
           display: flex;
           align-items: center;
           justify-content: center;
+
           font-weight: bold;
           flex-shrink: 0;
         }
 
+        /* ============================================
+           BIENVENIDA
+           ============================================ */
+
         .qr-welcome {
           padding: 36px 0 28px;
+          text-align: center;
         }
 
         .qr-welcome h2 {
           margin: 0 0 10px;
+
           font-size: clamp(24px, 3vw, 34px);
+
           color: ${COLORES.blanco};
         }
 
@@ -252,66 +362,121 @@ export default function Dashboard({ perfil, onLogout }) {
 
         .qr-welcome p {
           margin: 0;
+
           color: ${COLORES.secundario};
+
           line-height: 1.7;
         }
 
+        /* ============================================
+           TARJETAS DE RESUMEN
+           ============================================ */
+
         .qr-summary {
+          width: 100%;
+
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+
+          grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
           gap: 18px;
+
           margin-bottom: 34px;
         }
 
         .qr-summary-card {
+          min-width: 0;
+
           background: ${COLORES.panel};
+
           border: 1px solid ${COLORES.borde};
           border-radius: 14px;
+
           padding: 22px;
+
+          text-align: center;
         }
 
         .qr-summary-card p {
           margin: 0 0 12px;
+
           color: ${COLORES.secundario};
+
           font-size: 13px;
         }
 
         .qr-summary-card strong {
           font-size: 22px;
+
           color: ${COLORES.blanco};
         }
+
+        /* ============================================
+           TÍTULO DE MÓDULOS
+           ============================================ */
 
         .qr-section-title {
           font-size: 19px;
           font-weight: 700;
+
           margin-bottom: 20px;
+
           color: ${COLORES.blanco};
+
+          text-align: center;
         }
 
+        /* ============================================
+           CUADRÍCULA DE MÓDULOS
+           ============================================ */
+
         .qr-grid {
+          width: 100%;
+
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+
+          grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
           gap: 18px;
         }
 
+        /* ============================================
+           TARJETAS DE MÓDULOS
+           ============================================ */
+
         .qr-module {
+          width: 100%;
+          min-width: 0;
+          min-height: 210px;
+
           background: ${COLORES.panel};
+
           border: 1px solid ${COLORES.borde};
           border-radius: 15px;
+
           padding: 25px;
+
           text-align: left;
+
           color: ${COLORES.blanco};
-          min-height: 210px;
+
           display: flex;
           flex-direction: column;
+
           cursor: pointer;
+
           transition: 0.2s ease;
+
           font: inherit;
         }
 
         .qr-module:hover:not(:disabled) {
           border-color: ${COLORES.dorado};
+
           transform: translateY(-3px);
+
           background: ${COLORES.panelClaro};
         }
 
@@ -323,24 +488,33 @@ export default function Dashboard({ perfil, onLogout }) {
         .qr-module-icon {
           width: 48px;
           height: 48px;
+
           background: rgba(212,175,103,0.12);
+
           border-radius: 12px;
+
           display: flex;
           align-items: center;
           justify-content: center;
+
           color: ${COLORES.dorado};
+
           margin-bottom: 20px;
         }
 
         .qr-module h3 {
           margin: 0 0 9px;
+
           font-size: 18px;
+
           color: ${COLORES.blanco};
         }
 
         .qr-module p {
           margin: 0;
+
           color: ${COLORES.secundario};
+
           font-size: 13px;
           line-height: 1.6;
         }
@@ -348,35 +522,64 @@ export default function Dashboard({ perfil, onLogout }) {
         .qr-module-footer {
           margin-top: auto;
           padding-top: 20px;
+
           display: flex;
           justify-content: space-between;
           align-items: center;
+
           font-size: 12px;
+
           color: ${COLORES.dorado};
         }
+
+        /* ============================================
+           CERRAR SESIÓN
+           ============================================ */
 
         .qr-logout {
           margin-top: auto;
+
           display: flex;
           align-items: center;
           justify-content: center;
+
           gap: 10px;
+
           padding: 13px;
+
           background: transparent;
+
           border: 1px solid ${COLORES.borde};
           border-radius: 10px;
+
           color: #e6a0a0;
+
           cursor: pointer;
+
           font-weight: 600;
         }
 
+        .qr-logout:hover {
+          background: rgba(230,160,160,0.08);
+        }
+
+        /* ============================================
+           MENÚ MÓVIL
+           ============================================ */
+
         .qr-mobile-menu {
           display: none;
+
           border: 1px solid ${COLORES.borde};
+
           background: ${COLORES.panel};
+
           color: ${COLORES.dorado};
+
           border-radius: 8px;
+
           padding: 9px;
+
           cursor: pointer;
         }
 
@@ -384,21 +587,43 @@ export default function Dashboard({ perfil, onLogout }) {
           display: none;
         }
 
+        /* ============================================
+           PANTALLAS MEDIANAS
+           ============================================ */
+
         @media (max-width: 1100px) {
           .qr-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns:
+              repeat(2, minmax(0, 1fr));
+          }
+
+          .qr-main {
+            padding: 24px;
           }
         }
 
+        /* ============================================
+           TABLETS Y CELULARES
+           ============================================ */
+
         @media (max-width: 800px) {
+          .qr-dashboard {
+            width: 100%;
+          }
+
           .qr-sidebar {
             position: fixed;
+
             top: 0;
             bottom: 0;
             left: 0;
+
             z-index: 30;
+
             transform: translateX(-100%);
+
             transition: transform 0.2s ease;
+
             overflow-y: auto;
           }
 
@@ -408,9 +633,12 @@ export default function Dashboard({ perfil, onLogout }) {
 
           .qr-overlay.open {
             display: block;
+
             position: fixed;
             inset: 0;
+
             background: rgba(0,0,0,0.65);
+
             z-index: 20;
           }
 
@@ -419,6 +647,9 @@ export default function Dashboard({ perfil, onLogout }) {
           }
 
           .qr-main {
+            width: 100%;
+            min-width: 0;
+
             padding: 18px;
           }
 
@@ -431,6 +662,10 @@ export default function Dashboard({ perfil, onLogout }) {
           }
         }
 
+        /* ============================================
+           CELULARES PEQUEÑOS
+           ============================================ */
+
         @media (max-width: 520px) {
           .qr-grid {
             grid-template-columns: 1fr;
@@ -439,13 +674,35 @@ export default function Dashboard({ perfil, onLogout }) {
           .qr-user {
             width: 100%;
           }
+
+          .qr-main {
+            padding: 14px;
+          }
+
+          .qr-module {
+            min-height: 180px;
+            padding: 20px;
+          }
+
+          .qr-welcome h2 {
+            font-size: 24px;
+          }
         }
+
       `}</style>
+
+      {/* =============================================
+          FONDO OSCURO PARA MENÚ MÓVIL
+          ============================================= */}
 
       <div
         className={`qr-overlay ${menuAbierto ? "open" : ""}`}
         onClick={() => setMenuAbierto(false)}
       />
+
+      {/* =============================================
+          MENÚ LATERAL
+          ============================================= */}
 
       <aside className={`qr-sidebar ${menuAbierto ? "open" : ""}`}>
         <div className="qr-logo">
@@ -458,6 +715,7 @@ export default function Dashboard({ perfil, onLogout }) {
 
           <div className="qr-menu-items">
             <button
+              type="button"
               style={estiloBotonMenu(modulo === "inicio")}
               onClick={() => navegar("inicio")}
             >
@@ -470,6 +728,7 @@ export default function Dashboard({ perfil, onLogout }) {
 
               return (
                 <button
+                  type="button"
                   key={item.id}
                   style={{
                     ...estiloBotonMenu(modulo === item.id),
@@ -492,13 +751,19 @@ export default function Dashboard({ perfil, onLogout }) {
           </div>
         </nav>
 
-        <button className="qr-logout" onClick={onLogout}>
+        <button type="button" className="qr-logout" onClick={onLogout}>
           <LogOut size={18} />
           Cerrar sesión
         </button>
       </aside>
 
+      {/* =============================================
+          PANEL PRINCIPAL
+          ============================================= */}
+
       <main className="qr-main">
+        {/* BARRA SUPERIOR */}
+
         <header className="qr-topbar">
           <div
             style={{
@@ -508,6 +773,7 @@ export default function Dashboard({ perfil, onLogout }) {
             }}
           >
             <button
+              type="button"
               className="qr-mobile-menu"
               onClick={() => setMenuAbierto(!menuAbierto)}
               aria-label="Abrir menú"
@@ -520,6 +786,8 @@ export default function Dashboard({ perfil, onLogout }) {
               <p>QR PIEDRAS / Inicio</p>
             </div>
           </div>
+
+          {/* DATOS DEL ADMINISTRADOR */}
 
           <div className="qr-user">
             <div className="qr-avatar">{nombre.charAt(0).toUpperCase()}</div>
@@ -549,6 +817,10 @@ export default function Dashboard({ perfil, onLogout }) {
           </div>
         </header>
 
+        {/* ===========================================
+            CONTENIDO DE INICIO
+            =========================================== */}
+
         {modulo === "inicio" ? (
           <>
             <section className="qr-welcome">
@@ -561,6 +833,8 @@ export default function Dashboard({ perfil, onLogout }) {
                 solo lugar.
               </p>
             </section>
+
+            {/* RESUMEN */}
 
             <section className="qr-summary">
               <div className="qr-summary-card">
@@ -575,10 +849,12 @@ export default function Dashboard({ perfil, onLogout }) {
 
               <div className="qr-summary-card">
                 <p>Estado de la sesión</p>
+
                 <strong
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    justifyContent: "center",
                     gap: 8,
                     color: "#8cdda5",
                     fontSize: 18,
@@ -590,6 +866,8 @@ export default function Dashboard({ perfil, onLogout }) {
               </div>
             </section>
 
+            {/* MÓDULOS EMPRESARIALES */}
+
             <section>
               <h2 className="qr-section-title">Módulos empresariales</h2>
 
@@ -599,6 +877,7 @@ export default function Dashboard({ perfil, onLogout }) {
 
                   return (
                     <button
+                      type="button"
                       key={item.id}
                       className="qr-module"
                       onClick={() => navegar(item.id)}
@@ -609,6 +888,7 @@ export default function Dashboard({ perfil, onLogout }) {
                       </div>
 
                       <h3>{item.nombre}</h3>
+
                       <p>{item.descripcion}</p>
 
                       <div className="qr-module-footer">
@@ -631,6 +911,7 @@ export default function Dashboard({ perfil, onLogout }) {
         ) : (
           <section className="qr-welcome">
             <h2>{moduloActual?.nombre || "Módulo"}</h2>
+
             <p>Este módulo estará disponible próximamente.</p>
           </section>
         )}
