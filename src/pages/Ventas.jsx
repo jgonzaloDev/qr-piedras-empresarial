@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -75,21 +74,17 @@ const formularioNuevo = () => ({
 });
 
 const calcular = (items, descuento, incluyeIgv) => {
-  const subtotal = Math.round(
-    items.reduce(
-      (s, i) =>
-        s +
-        Number(i.cantidad || 0) *
-          Number(i.precio_unitario || 0),
-      0
-    ) * 100
-  ) / 100;
+  const subtotal =
+    Math.round(
+      items.reduce(
+        (s, i) => s + Number(i.cantidad || 0) * Number(i.precio_unitario || 0),
+        0,
+      ) * 100,
+    ) / 100;
 
   const desc = Number(descuento || 0);
   const base = Math.max(0, subtotal - desc);
-  const igv = incluyeIgv
-    ? Math.round(base * 0.18 * 100) / 100
-    : 0;
+  const igv = incluyeIgv ? Math.round(base * 0.18 * 100) / 100 : 0;
 
   return {
     subtotal,
@@ -153,7 +148,7 @@ function generarPDF(venta, cliente, items, pagos) {
   escribir(
     `Origen: ${venta.origen === "cotizacion" ? "Cotización" : "Directa"}`,
     12,
-    y + 10
+    y + 10,
   );
 
   const datosCliente = [
@@ -177,23 +172,19 @@ function generarPDF(venta, cliente, items, pagos) {
   autoTable(doc, {
     startY: y,
     margin: { left: 12, right: 12, bottom: 18 },
-    head: [[
-      "N.º",
-      "Descripción",
-      "Unidad",
-      "Cantidad",
-      "P. unitario",
-      "Importe",
-    ]],
+    head: [
+      ["N.º", "Descripción", "Unidad", "Cantidad", "P. unitario", "Importe"],
+    ],
     body: items.map((i, index) => [
       texto(index + 1),
       texto(i.descripcion),
       texto(i.unidad),
       texto(i.cantidad),
       dinero(i.precio_unitario, venta.moneda),
-      dinero(i.importe ?? (
-        Number(i.cantidad) * Number(i.precio_unitario)
-      ), venta.moneda),
+      dinero(
+        i.importe ?? Number(i.cantidad) * Number(i.precio_unitario),
+        venta.moneda,
+      ),
     ]),
     theme: "grid",
     styles: {
@@ -261,16 +252,8 @@ function generarPDF(venta, cliente, items, pagos) {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  escribir(
-    `Monto pagado: ${dinero(venta.monto_pagado, venta.moneda)}`,
-    12,
-    y
-  );
-  escribir(
-    `Saldo pendiente: ${dinero(venta.saldo, venta.moneda)}`,
-    105,
-    y
-  );
+  escribir(`Monto pagado: ${dinero(venta.monto_pagado, venta.moneda)}`, 12, y);
+  escribir(`Saldo pendiente: ${dinero(venta.saldo, venta.moneda)}`, 105, y);
   y += 7;
 
   if (pagos.length) {
@@ -282,7 +265,7 @@ function generarPDF(venta, cliente, items, pagos) {
       escribir(
         `${fechaPE(pago.fecha)} | ${pago.metodo} | ${dinero(pago.monto, venta.moneda)}`,
         12,
-        y
+        y,
       );
       y += 5;
     }
@@ -293,10 +276,7 @@ function generarPDF(venta, cliente, items, pagos) {
     titulo("OBSERVACIONES");
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    const lineas = doc.splitTextToSize(
-      texto(venta.observaciones),
-      W - 24
-    );
+    const lineas = doc.splitTextToSize(texto(venta.observaciones), W - 24);
     for (const linea of lineas) {
       asegurar(5);
       escribir(linea, 12, y);
@@ -322,21 +302,15 @@ function generarPDF(venta, cliente, items, pagos) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(...ORO);
-  escribir(
-    "DATOS BANCARIOS Y MEDIOS DE PAGO",
-    W / 2,
-    Y_BANCOS + 6.5,
-    { align: "center" }
-  );
+  escribir("DATOS BANCARIOS Y MEDIOS DE PAGO", W / 2, Y_BANCOS + 6.5, {
+    align: "center",
+  });
 
   doc.setFontSize(8);
   doc.setTextColor(...NEGRO);
-  escribir(
-    `TITULAR: ${EMPRESA.titular}`,
-    W / 2,
-    Y_BANCOS + 16,
-    { align: "center" }
-  );
+  escribir(`TITULAR: ${EMPRESA.titular}`, W / 2, Y_BANCOS + 16, {
+    align: "center",
+  });
 
   doc.setDrawColor(...ORO);
   doc.line(17, Y_BANCOS + 19, W - 17, Y_BANCOS + 19);
@@ -351,16 +325,8 @@ function generarPDF(venta, cliente, items, pagos) {
   escribir(`Cuenta: ${EMPRESA.bcp}`, 17, Y_BANCOS + 31);
   escribir(`CCI: ${EMPRESA.bcpCCI}`, 17, Y_BANCOS + 37);
 
-  escribir(
-    `Cuenta: ${EMPRESA.interbank}`,
-    108,
-    Y_BANCOS + 31
-  );
-  escribir(
-    `CCI: ${EMPRESA.interbankCCI}`,
-    108,
-    Y_BANCOS + 37
-  );
+  escribir(`Cuenta: ${EMPRESA.interbank}`, 108, Y_BANCOS + 31);
+  escribir(`CCI: ${EMPRESA.interbankCCI}`, 108, Y_BANCOS + 37);
 
   doc.setDrawColor(220, 215, 205);
   doc.line(17, Y_BANCOS + 42, W - 17, Y_BANCOS + 42);
@@ -372,7 +338,7 @@ function generarPDF(venta, cliente, items, pagos) {
     `YAPE: ${EMPRESA.yape}    |    PLIN: ${EMPRESA.plin}`,
     W / 2,
     Y_BANCOS + 49,
-    { align: "center" }
+    { align: "center" },
   );
 
   const paginas = doc.internal.getNumberOfPages();
@@ -383,11 +349,7 @@ function generarPDF(venta, cliente, items, pagos) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...GRIS);
-    escribir(
-      `${EMPRESA.nombre} | WhatsApp: ${EMPRESA.telefono}`,
-      12,
-      H - 9
-    );
+    escribir(`${EMPRESA.nombre} | WhatsApp: ${EMPRESA.telefono}`, 12, H - 9);
     escribir(`Página ${p} de ${paginas}`, W - 12, H - 9, {
       align: "right",
     });
@@ -410,6 +372,11 @@ export default function Ventas({ onVolver, onBack }) {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [pagoVenta, setPagoVenta] = useState(null);
+  const [editandoId, setEditandoId] = useState(null);
+  const [motivoEdicion, setMotivoEdicion] = useState("");
+  const [anulandoVenta, setAnulandoVenta] = useState(null);
+  const [motivoAnulacion, setMotivoAnulacion] = useState("");
+  const [procesandoAnulacion, setProcesandoAnulacion] = useState(false);
   const [pagoForm, setPagoForm] = useState({
     monto: "",
     metodo: "transferencia",
@@ -417,18 +384,20 @@ export default function Ventas({ onVolver, onBack }) {
   });
   const [procesandoPago, setProcesandoPago] = useState(false);
 
-  const avisar = (contenido, tipo = "ok") =>
-    setMensaje({ contenido, tipo });
+  const avisar = (contenido, tipo = "ok") => setMensaje({ contenido, tipo });
 
   const cargarDatos = useCallback(async () => {
     setCargando(true);
     try {
       const [rc, rq, rv] = await Promise.all([
-        supabase.from("clientes").select("*")
-          .order("nombre_razon_social"),
-        supabase.from("cotizaciones").select("*")
+        supabase.from("clientes").select("*").order("nombre_razon_social"),
+        supabase
+          .from("cotizaciones")
+          .select("*")
           .order("creado_en", { ascending: false }),
-        supabase.from("ventas").select("*")
+        supabase
+          .from("ventas")
+          .select("*")
           .order("creado_en", { ascending: false }),
       ]);
 
@@ -454,6 +423,8 @@ export default function Ventas({ onVolver, onBack }) {
     setForm((anterior) => ({ ...anterior, [campo]: valor }));
 
   const cambiarOrigen = (origen) => {
+    setEditandoId(null);
+    setMotivoEdicion("");
     setForm({
       ...formularioNuevo(),
       origen,
@@ -465,7 +436,7 @@ export default function Ventas({ onVolver, onBack }) {
     setForm((anterior) => ({
       ...anterior,
       items: anterior.items.map((item, i) =>
-        i === indice ? { ...item, [campo]: valor } : item
+        i === indice ? { ...item, [campo]: valor } : item,
       ),
     }));
   };
@@ -480,19 +451,19 @@ export default function Ventas({ onVolver, onBack }) {
   const quitarItem = (indice) => {
     setForm((anterior) => ({
       ...anterior,
-      items: anterior.items.length > 1
-        ? anterior.items.filter((_, i) => i !== indice)
-        : [itemNuevo()],
+      items:
+        anterior.items.length > 1
+          ? anterior.items.filter((_, i) => i !== indice)
+          : [itemNuevo()],
     }));
   };
 
   const cotizacionesDisponibles = useMemo(() => {
     const usadas = new Set(
-      ventas.filter((v) => v.cotizacion_id)
-        .map((v) => v.cotizacion_id)
+      ventas.filter((v) => v.cotizacion_id).map((v) => v.cotizacion_id),
     );
     return cotizaciones.filter(
-      (c) => c.estado !== "anulada" && !usadas.has(c.id)
+      (c) => c.estado !== "anulada" && !usadas.has(c.id),
     );
   }, [cotizaciones, ventas]);
 
@@ -523,8 +494,7 @@ export default function Ventas({ onVolver, onBack }) {
         cotizacion_id: id,
         cliente_id: cot.cliente_id,
         moneda: cot.moneda || "PEN",
-        incluye_igv:
-          cot.incluye_igv ?? cot.aplicar_igv ?? true,
+        incluye_igv: cot.incluye_igv ?? cot.aplicar_igv ?? true,
         descuento: Number(cot.descuento || 0),
         observaciones: cot.observaciones || "",
         items: (data || []).map((i) => ({
@@ -540,13 +510,73 @@ export default function Ventas({ onVolver, onBack }) {
   };
 
   const totales = useMemo(
-    () => calcular(
-      form.items,
-      form.descuento,
-      form.incluye_igv
-    ),
-    [form.items, form.descuento, form.incluye_igv]
+    () => calcular(form.items, form.descuento, form.incluye_igv),
+    [form.items, form.descuento, form.incluye_igv],
   );
+
+  const iniciarEdicion = async (venta) => {
+    if (venta.estado === "anulada" || Number(venta.monto_pagado) > 0) {
+      avisar("Solo se pueden editar ventas activas sin pagos.", "error");
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from("venta_items")
+        .select("*")
+        .eq("venta_id", venta.id)
+        .order("orden");
+      if (error) throw error;
+      setForm({
+        origen: venta.origen || "directa",
+        cliente_id: venta.cliente_id || "",
+        cotizacion_id: venta.cotizacion_id || "",
+        fecha: venta.fecha || hoy(),
+        moneda: venta.moneda || "PEN",
+        incluye_igv: venta.incluye_igv ?? true,
+        descuento: Number(venta.descuento || 0),
+        observaciones: venta.observaciones || "",
+        items: (data || []).map((i) => ({
+          descripcion: i.descripcion,
+          unidad: i.unidad,
+          cantidad: i.cantidad,
+          precio_unitario: i.precio_unitario,
+        })),
+      });
+      setEditandoId(venta.id);
+      setMotivoEdicion("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      avisar(
+        `Editando ${numeroVenta(venta.numero)}. Los cambios se guardarán con auditoría.`,
+      );
+    } catch (error) {
+      avisar(error.message, "error");
+    }
+  };
+
+  const confirmarAnulacion = async (e) => {
+    e.preventDefault();
+    if (!anulandoVenta) return;
+    if (motivoAnulacion.trim().length < 5) {
+      avisar("Escribe un motivo de al menos 5 caracteres.", "error");
+      return;
+    }
+    setProcesandoAnulacion(true);
+    try {
+      const { error } = await supabase.rpc("anular_venta_sin_pagos", {
+        p_venta_id: anulandoVenta.id,
+        p_motivo: motivoAnulacion.trim(),
+      });
+      if (error) throw error;
+      setAnulandoVenta(null);
+      setMotivoAnulacion("");
+      await cargarDatos();
+      avisar("Venta anulada y registrada en auditoría.");
+    } catch (error) {
+      avisar(error.message, "error");
+    } finally {
+      setProcesandoAnulacion(false);
+    }
+  };
 
   const guardar = async (e) => {
     e.preventDefault();
@@ -570,7 +600,7 @@ export default function Ventas({ onVolver, onBack }) {
           !Number.isFinite(Number(i.cantidad)) ||
           Number(i.cantidad) <= 0 ||
           !Number.isFinite(Number(i.precio_unitario)) ||
-          Number(i.precio_unitario) < 0
+          Number(i.precio_unitario) < 0,
       )
     ) {
       avisar("Revisa los materiales y sus precios.", "error");
@@ -586,11 +616,21 @@ export default function Ventas({ onVolver, onBack }) {
       return;
     }
 
+    if (editandoId && motivoEdicion.trim().length < 5) {
+      avisar(
+        "Indica el motivo de la modificación (mínimo 5 caracteres).",
+        "error",
+      );
+      return;
+    }
     setGuardando(true);
     try {
       const { data: id, error } = await supabase.rpc(
-        "guardar_venta",
+        editandoId ? "editar_venta_sin_pagos" : "guardar_venta",
         {
+          ...(editandoId
+            ? { p_venta_id: editandoId, p_motivo: motivoEdicion.trim() }
+            : {}),
           p_cliente_id: form.cliente_id,
           p_fecha: form.fecha,
           p_moneda: form.moneda,
@@ -603,27 +643,37 @@ export default function Ventas({ onVolver, onBack }) {
             cantidad: Number(i.cantidad),
             precio_unitario: Number(i.precio_unitario),
           })),
-          p_cotizacion_id:
-            form.origen === "cotizacion"
-              ? form.cotizacion_id
-              : null,
-        }
+          ...(!editandoId
+            ? {
+                p_cotizacion_id:
+                  form.origen === "cotizacion" ? form.cotizacion_id : null,
+              }
+            : {}),
+        },
       );
 
       if (error) throw error;
 
+      const ventaGuardadaId = editandoId || id;
+      const fueEdicion = Boolean(editandoId);
+      setEditandoId(null);
+      setMotivoEdicion("");
       setForm(formularioNuevo());
-      avisar("Venta guardada correctamente.");
+      avisar(
+        fueEdicion
+          ? "Venta modificada correctamente."
+          : "Venta guardada correctamente.",
+      );
       await cargarDatos();
 
       // La venta ya está guardada. Un fallo del PDF
       // no debe provocar que se registre otra vez.
       try {
-        await descargarPDF(id, false);
+        await descargarPDF(ventaGuardadaId, false);
       } catch (pdfError) {
         avisar(
           "Venta guardada, pero el PDF falló: " + pdfError.message,
-          "error"
+          "error",
         );
       }
     } catch (error) {
@@ -634,16 +684,20 @@ export default function Ventas({ onVolver, onBack }) {
   };
 
   const descargarPDF = async (ventaOId, mostrarAviso = true) => {
-    const id = typeof ventaOId === "string"
-      ? ventaOId
-      : ventaOId.id;
+    const id = typeof ventaOId === "string" ? ventaOId : ventaOId.id;
 
     const [rv, ri, rp] = await Promise.all([
       supabase.from("ventas").select("*").eq("id", id).single(),
-      supabase.from("venta_items").select("*")
-        .eq("venta_id", id).order("orden"),
-      supabase.from("venta_pagos").select("*")
-        .eq("venta_id", id).order("creado_en"),
+      supabase
+        .from("venta_items")
+        .select("*")
+        .eq("venta_id", id)
+        .order("orden"),
+      supabase
+        .from("venta_pagos")
+        .select("*")
+        .eq("venta_id", id)
+        .order("creado_en"),
     ]);
 
     if (rv.error) throw rv.error;
@@ -651,9 +705,7 @@ export default function Ventas({ onVolver, onBack }) {
     if (rp.error) throw rp.error;
 
     const venta = rv.data;
-    const cliente = clientes.find(
-      (c) => c.id === venta.cliente_id
-    );
+    const cliente = clientes.find((c) => c.id === venta.cliente_id);
 
     generarPDF(venta, cliente, ri.data || [], rp.data || []);
 
@@ -684,15 +736,12 @@ export default function Ventas({ onVolver, onBack }) {
 
     setProcesandoPago(true);
     try {
-      const { error } = await supabase.rpc(
-        "registrar_pago_venta",
-        {
-          p_venta_id: pagoVenta.id,
-          p_monto: monto,
-          p_metodo: pagoForm.metodo,
-          p_referencia: pagoForm.referencia,
-        }
-      );
+      const { error } = await supabase.rpc("registrar_pago_venta", {
+        p_venta_id: pagoVenta.id,
+        p_monto: monto,
+        p_metodo: pagoForm.metodo,
+        p_referencia: pagoForm.referencia,
+      });
       if (error) throw error;
 
       setPagoVenta(null);
@@ -713,20 +762,14 @@ export default function Ventas({ onVolver, onBack }) {
   const cambiarEstado = async (venta, estado) => {
     if (venta.estado === estado) return;
 
-    if (
-      !window.confirm(
-        `¿Cambiar ${numeroVenta(venta.numero)} a "${estado}"?`
-      )
-    ) return;
+    if (!window.confirm(`¿Cambiar ${numeroVenta(venta.numero)} a "${estado}"?`))
+      return;
 
     try {
-      const { error } = await supabase.rpc(
-        "cambiar_estado_venta",
-        {
-          p_venta_id: venta.id,
-          p_estado: estado,
-        }
-      );
+      const { error } = await supabase.rpc("cambiar_estado_venta", {
+        p_venta_id: venta.id,
+        p_estado: estado,
+      });
       if (error) throw error;
       avisar("Estado actualizado.");
       await cargarDatos();
@@ -736,19 +779,21 @@ export default function Ventas({ onVolver, onBack }) {
   };
 
   const filtradas = useMemo(
-    () => ventas.filter((v) => {
-      const cliente = clientes.find(
-        (c) => c.id === v.cliente_id
-      );
-      return [
-        numeroVenta(v.numero),
-        cliente?.nombre_razon_social,
-        v.estado,
-        estadoCobro(v),
-        v.origen,
-      ].join(" ").toLowerCase().includes(busqueda.toLowerCase());
-    }),
-    [ventas, clientes, busqueda]
+    () =>
+      ventas.filter((v) => {
+        const cliente = clientes.find((c) => c.id === v.cliente_id);
+        return [
+          numeroVenta(v.numero),
+          cliente?.nombre_razon_social,
+          v.estado,
+          estadoCobro(v),
+          v.origen,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(busqueda.toLowerCase());
+      }),
+    [ventas, clientes, busqueda],
   );
 
   const indicadores = useMemo(() => {
@@ -756,17 +801,12 @@ export default function Ventas({ onVolver, onBack }) {
     const mes = hoy().slice(0, 7);
 
     return {
-      mes: activas.filter(
-        (v) => texto(v.fecha).startsWith(mes)
-      ).reduce((s, v) => s + Number(v.total || 0), 0),
+      mes: activas
+        .filter((v) => texto(v.fecha).startsWith(mes))
+        .reduce((s, v) => s + Number(v.total || 0), 0),
       cantidad: activas.length,
-      pendiente: activas.reduce(
-        (s, v) => s + Number(v.saldo || 0),
-        0
-      ),
-      entregadas: activas.filter(
-        (v) => v.estado === "entregada"
-      ).length,
+      pendiente: activas.reduce((s, v) => s + Number(v.saldo || 0), 0),
+      entregadas: activas.filter((v) => v.estado === "entregada").length,
     };
   }, [ventas]);
 
@@ -774,13 +814,9 @@ export default function Ventas({ onVolver, onBack }) {
     <main className="qr-ven">
       <header className="qr-ven-header">
         <div>
-          <span className="qr-ven-brand">
-            QR PIEDRAS NATURALES
-          </span>
+          <span className="qr-ven-brand">QR PIEDRAS NATURALES</span>
           <h1>Gestión de ventas</h1>
-          <p>
-            Ventas directas, cotizaciones, cobros y seguimiento.
-          </p>
+          <p>Ventas directas, cotizaciones, cobros y seguimiento.</p>
         </div>
         <button
           type="button"
@@ -802,12 +838,14 @@ export default function Ventas({ onVolver, onBack }) {
           <span>Ventas del mes (PEN)</span>
           <strong>
             {dinero(
-              ventas.filter(
-                (v) =>
-                  v.estado !== "anulada" &&
-                  v.moneda === "PEN" &&
-                  texto(v.fecha).startsWith(hoy().slice(0, 7))
-              ).reduce((s, v) => s + Number(v.total || 0), 0)
+              ventas
+                .filter(
+                  (v) =>
+                    v.estado !== "anulada" &&
+                    v.moneda === "PEN" &&
+                    texto(v.fecha).startsWith(hoy().slice(0, 7)),
+                )
+                .reduce((s, v) => s + Number(v.total || 0), 0),
             )}
           </strong>
         </article>
@@ -819,9 +857,9 @@ export default function Ventas({ onVolver, onBack }) {
           <span>Saldo pendiente (PEN)</span>
           <strong>
             {dinero(
-              ventas.filter(
-                (v) => v.estado !== "anulada" && v.moneda === "PEN"
-              ).reduce((s, v) => s + Number(v.saldo || 0), 0)
+              ventas
+                .filter((v) => v.estado !== "anulada" && v.moneda === "PEN")
+                .reduce((s, v) => s + Number(v.saldo || 0), 0),
             )}
           </strong>
         </article>
@@ -832,8 +870,8 @@ export default function Ventas({ onVolver, onBack }) {
       </section>
 
       <p className="qr-ven-nota">
-        Los importes del resumen corresponden a ventas en soles.
-        Las ventas en dólares se muestran individualmente en el historial.
+        Los importes del resumen corresponden a ventas en soles. Las ventas en
+        dólares se muestran individualmente en el historial.
       </p>
 
       <section className="qr-ven-panel">
@@ -866,17 +904,11 @@ export default function Ventas({ onVolver, onBack }) {
               <select
                 required
                 value={form.cotizacion_id}
-                onChange={(e) =>
-                  seleccionarCotizacion(e.target.value)
-                }
+                onChange={(e) => seleccionarCotizacion(e.target.value)}
               >
-                <option value="">
-                  Seleccionar cotización disponible
-                </option>
+                <option value="">Seleccionar cotización disponible</option>
                 {cotizacionesDisponibles.map((cot) => {
-                  const cliente = clientes.find(
-                    (c) => c.id === cot.cliente_id
-                  );
+                  const cliente = clientes.find((c) => c.id === cot.cliente_id);
                   return (
                     <option key={cot.id} value={cot.id}>
                       {numeroCotizacion(cot.numero)} —{" "}
@@ -887,8 +919,8 @@ export default function Ventas({ onVolver, onBack }) {
                 })}
               </select>
               <small>
-                La venta utilizará los materiales y precios originales
-                de la cotización seleccionada.
+                La venta utilizará los materiales y precios originales de la
+                cotización seleccionada.
               </small>
             </label>
           )}
@@ -900,9 +932,7 @@ export default function Ventas({ onVolver, onBack }) {
                 required
                 disabled={form.origen === "cotizacion"}
                 value={form.cliente_id}
-                onChange={(e) =>
-                  cambiar("cliente_id", e.target.value)
-                }
+                onChange={(e) => cambiar("cliente_id", e.target.value)}
               >
                 <option value="">Seleccionar cliente</option>
                 {clientes.map((c) => (
@@ -952,9 +982,7 @@ export default function Ventas({ onVolver, onBack }) {
                 type="checkbox"
                 disabled={form.origen === "cotizacion"}
                 checked={form.incluye_igv}
-                onChange={(e) =>
-                  cambiar("incluye_igv", e.target.checked)
-                }
+                onChange={(e) => cambiar("incluye_igv", e.target.checked)}
               />
               Agregar IGV (18%)
             </label>
@@ -991,9 +1019,7 @@ export default function Ventas({ onVolver, onBack }) {
                         value={item.descripcion}
                         placeholder="Ej. Laja ayacuchana"
                         onChange={(e) =>
-                          cambiarItem(
-                            indice, "descripcion", e.target.value
-                          )
+                          cambiarItem(indice, "descripcion", e.target.value)
                         }
                       />
                     </td>
@@ -1034,17 +1060,14 @@ export default function Ventas({ onVolver, onBack }) {
                         readOnly={form.origen === "cotizacion"}
                         value={item.precio_unitario}
                         onChange={(e) =>
-                          cambiarItem(
-                            indice, "precio_unitario", e.target.value
-                          )
+                          cambiarItem(indice, "precio_unitario", e.target.value)
                         }
                       />
                     </td>
                     <td className="importe">
                       {dinero(
-                        Number(item.cantidad) *
-                          Number(item.precio_unitario),
-                        form.moneda
+                        Number(item.cantidad) * Number(item.precio_unitario),
+                        form.moneda,
                       )}
                     </td>
                     {form.origen === "directa" && (
@@ -1089,27 +1112,32 @@ export default function Ventas({ onVolver, onBack }) {
               rows="3"
               placeholder="Detalles de entrega o condiciones comerciales"
               value={form.observaciones}
-              onChange={(e) =>
-                cambiar("observaciones", e.target.value)
-              }
+              onChange={(e) => cambiar("observaciones", e.target.value)}
             />
           </label>
 
+          {editandoId && (
+            <label className="qr-ven-observaciones">
+              Motivo de la modificación (obligatorio)
+              <textarea
+                required
+                minLength={5}
+                value={motivoEdicion}
+                onChange={(e) => setMotivoEdicion(e.target.value)}
+                placeholder="Ej. Corrección de cantidad antes de recibir pagos"
+              />
+            </label>
+          )}
           <div className="qr-ven-acciones">
-            <button
-              type="submit"
-              className="qr-ven-gold"
-              disabled={guardando}
-            >
+            <button type="submit" className="qr-ven-gold" disabled={guardando}>
               {guardando
                 ? "Guardando..."
-                : "Guardar venta y generar PDF"}
+                : editandoId
+                  ? "Guardar cambios y generar PDF"
+                  : "Guardar venta y generar PDF"}
             </button>
-            <button
-              type="button"
-              onClick={() => cambiarOrigen("directa")}
-            >
-              Limpiar
+            <button type="button" onClick={() => cambiarOrigen("directa")}>
+              {editandoId ? "Cancelar edición" : "Limpiar"}
             </button>
           </div>
         </form>
@@ -1151,43 +1179,29 @@ export default function Ventas({ onVolver, onBack }) {
             </thead>
             <tbody>
               {filtradas.map((v) => {
-                const cliente = clientes.find(
-                  (c) => c.id === v.cliente_id
-                );
+                const cliente = clientes.find((c) => c.id === v.cliente_id);
                 return (
                   <tr key={v.id}>
                     <td>{numeroVenta(v.numero)}</td>
                     <td>{cliente?.nombre_razon_social || "—"}</td>
                     <td>{fechaPE(v.fecha)}</td>
                     <td>{v.origen}</td>
-                    <td className="importe">
-                      {dinero(v.total, v.moneda)}
-                    </td>
+                    <td className="importe">{dinero(v.total, v.moneda)}</td>
                     <td className="importe">
                       {dinero(v.monto_pagado, v.moneda)}
                     </td>
-                    <td className="importe">
-                      {dinero(v.saldo, v.moneda)}
-                    </td>
+                    <td className="importe">{dinero(v.saldo, v.moneda)}</td>
                     <td>
-                      <span className={`qr-ven-cobro qr-ven-cobro-${estadoCobro(v).toLowerCase()}`}>
+                      <span
+                        className={`qr-ven-cobro qr-ven-cobro-${estadoCobro(v).toLowerCase()}`}
+                      >
                         {estadoCobro(v)}
                       </span>
                     </td>
                     <td>
-                      <select
-                        className="qr-ven-estado"
-                        value={v.estado}
-                        disabled={v.estado === "anulada"}
-                        onChange={(e) =>
-                          cambiarEstado(v, e.target.value)
-                        }
-                      >
-                        <option value="pendiente">Pendiente</option>
-                        <option value="confirmada">Confirmada</option>
-                        <option value="entregada">Entregada</option>
-                        <option value="anulada">Anulada</option>
-                      </select>
+                      <span className="qr-ven-estado">
+                        {v.estado === "anulada" ? "Anulada" : "Activa"}
+                      </span>
                     </td>
                     <td>
                       <div className="qr-ven-fila-acciones">
@@ -1197,23 +1211,43 @@ export default function Ventas({ onVolver, onBack }) {
                         >
                           PDF
                         </button>
-                        {v.estado !== "anulada" &&
-                          Number(v.saldo) > 0 && (
+                        {v.estado !== "anulada" && (
+                          <>
                             <button
                               type="button"
-                              className="qr-ven-gold"
+                              disabled={Number(v.monto_pagado) > 0}
+                              onClick={() => iniciarEdicion(v)}
+                            >
+                              Modificar
+                            </button>
+                            <button
+                              type="button"
+                              className="qr-ven-danger"
                               onClick={() => {
-                                setPagoVenta(v);
-                                setPagoForm({
-                                  monto: "",
-                                  metodo: "transferencia",
-                                  referencia: "",
-                                });
+                                setAnulandoVenta(v);
+                                setMotivoAnulacion("");
                               }}
                             >
-                              Cobrar
+                              Anular
                             </button>
-                          )}
+                          </>
+                        )}
+                        {v.estado !== "anulada" && Number(v.saldo) > 0 && (
+                          <button
+                            type="button"
+                            className="qr-ven-gold"
+                            onClick={() => {
+                              setPagoVenta(v);
+                              setPagoForm({
+                                monto: "",
+                                metodo: "transferencia",
+                                referencia: "",
+                              });
+                            }}
+                          >
+                            Cobrar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1234,11 +1268,51 @@ export default function Ventas({ onVolver, onBack }) {
         </div>
       </section>
 
-      {pagoVenta && (
+      {anulandoVenta && (
         <div
           className="qr-ven-modal-fondo"
-          onClick={() => setPagoVenta(null)}
+          onClick={() => setAnulandoVenta(null)}
         >
+          <div
+            className="qr-ven-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Anular venta"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Anular {numeroVenta(anulandoVenta.numero)}</h2>
+            <p>
+              Esta operación conservará la venta en el historial. Si tiene
+              pagos, el sistema impedirá la anulación hasta regularizarlos.
+            </p>
+            <form onSubmit={confirmarAnulacion}>
+              <label>
+                Motivo de anulación
+                <textarea
+                  required
+                  minLength={5}
+                  value={motivoAnulacion}
+                  onChange={(e) => setMotivoAnulacion(e.target.value)}
+                />
+              </label>
+              <div className="qr-ven-acciones">
+                <button
+                  type="submit"
+                  className="qr-ven-danger"
+                  disabled={procesandoAnulacion}
+                >
+                  {procesandoAnulacion ? "Anulando..." : "Confirmar anulación"}
+                </button>
+                <button type="button" onClick={() => setAnulandoVenta(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {pagoVenta && (
+        <div className="qr-ven-modal-fondo" onClick={() => setPagoVenta(null)}>
           <div
             className="qr-ven-modal"
             role="dialog"
@@ -1247,12 +1321,8 @@ export default function Ventas({ onVolver, onBack }) {
             onClick={(e) => e.stopPropagation()}
           >
             <h2>Registrar pago</h2>
-            <p>
-              Venta: {numeroVenta(pagoVenta.numero)}
-            </p>
-            <p>
-              Saldo: {dinero(pagoVenta.saldo, pagoVenta.moneda)}
-            </p>
+            <p>Venta: {numeroVenta(pagoVenta.numero)}</p>
+            <p>Saldo: {dinero(pagoVenta.saldo, pagoVenta.moneda)}</p>
 
             <form onSubmit={registrarPago}>
               <label>
@@ -1313,14 +1383,9 @@ export default function Ventas({ onVolver, onBack }) {
                   type="submit"
                   disabled={procesandoPago}
                 >
-                  {procesandoPago
-                    ? "Registrando..."
-                    : "Confirmar pago"}
+                  {procesandoPago ? "Registrando..." : "Confirmar pago"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setPagoVenta(null)}
-                >
+                <button type="button" onClick={() => setPagoVenta(null)}>
                   Cancelar
                 </button>
               </div>
