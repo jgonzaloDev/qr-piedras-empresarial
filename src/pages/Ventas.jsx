@@ -44,6 +44,17 @@ const dinero = (n, moneda = "PEN") =>
     currency: moneda === "USD" ? "USD" : "PEN",
   }).format(Number(n) || 0);
 
+// El cobro es independiente del estado comercial/entrega.
+const estadoCobro = (venta) => {
+  if (venta.estado === "anulada") return "Anulada";
+  const total = Number(venta.total || 0);
+  const pagado = Number(venta.monto_pagado || 0);
+  const saldo = Number(venta.saldo ?? Math.max(0, total - pagado));
+  if (saldo <= 0.005) return "Pagada";
+  if (pagado > 0.005) return "Parcial";
+  return "Pendiente";
+};
+
 const itemNuevo = () => ({
   descripcion: "",
   unidad: "m²",
@@ -138,7 +149,7 @@ function generarPDF(venta, cliente, items, pagos) {
   doc.setFontSize(8);
 
   escribir(`Fecha: ${fechaPE(venta.fecha)}`, 12, y);
-  escribir(`Estado: ${texto(venta.estado).toUpperCase()}`, 12, y + 5);
+  escribir(`Estado comercial: ${texto(venta.estado).toUpperCase()}`, 12, y + 5);
   escribir(
     `Origen: ${venta.origen === "cotizacion" ? "Cotización" : "Directa"}`,
     12,
@@ -246,7 +257,7 @@ function generarPDF(venta, cliente, items, pagos) {
   lineaTotal("TOTAL", venta.total, true);
 
   y += 3;
-  titulo("ESTADO DE COBRO");
+  titulo(`ESTADO DE COBRO: ${estadoCobro(venta).toUpperCase()}`);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
@@ -733,6 +744,7 @@ export default function Ventas({ onVolver, onBack }) {
         numeroVenta(v.numero),
         cliente?.nombre_razon_social,
         v.estado,
+        estadoCobro(v),
         v.origen,
       ].join(" ").toLowerCase().includes(busqueda.toLowerCase());
     }),
@@ -1132,7 +1144,8 @@ export default function Ventas({ onVolver, onBack }) {
                 <th>Total</th>
                 <th>Pagado</th>
                 <th>Saldo</th>
-                <th>Estado</th>
+                <th>Cobro</th>
+                <th>Estado comercial</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -1155,6 +1168,11 @@ export default function Ventas({ onVolver, onBack }) {
                     </td>
                     <td className="importe">
                       {dinero(v.saldo, v.moneda)}
+                    </td>
+                    <td>
+                      <span className={`qr-ven-cobro qr-ven-cobro-${estadoCobro(v).toLowerCase()}`}>
+                        {estadoCobro(v)}
+                      </span>
                     </td>
                     <td>
                       <select
@@ -1204,7 +1222,7 @@ export default function Ventas({ onVolver, onBack }) {
 
               {!filtradas.length && (
                 <tr>
-                  <td colSpan="9" className="qr-ven-vacio">
+                  <td colSpan="10" className="qr-ven-vacio">
                     {cargando
                       ? "Cargando ventas..."
                       : "No se encontraron ventas."}

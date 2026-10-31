@@ -477,3 +477,72 @@
     flex: 1;
   }
 }
+
+/* =========================================
+   MEJORAS VISUALES - MODULO VENTAS
+========================================= */
+
+/* Titulos visibles sobre fondo oscuro */
+.qr-ven h1,
+.qr-ven h2,
+.qr-ven h3 {
+  color: #f5f5f5;
+}
+
+.qr-ven-panel-head h2 {
+  color: #ddb86c;
+}
+
+.qr-ven-header h1 {
+  color: #ffffff;
+}
+
+/* Texto del historial */
+.qr-ven-panel-head p {
+  color: #b9bac0;
+}
+
+/* Indicadores del estado de cobro */
+.qr-ven-cobro,
+.qr-ven-cobro-estado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Venta totalmente pagada */
+.qr-ven-cobro.pagada,
+.qr-ven-cobro-estado.pagada {
+  background: #173c2b;
+  border: 1px solid #37855b;
+  color: #a5edbd;
+}
+
+/* Venta con abono parcial */
+.qr-ven-cobro.parcial,
+.qr-ven-cobro-estado.parcial {
+  background: #403216;
+  border: 1px solid #9a7730;
+  color: #f3d48b;
+}
+
+/* Venta sin pagos */
+.qr-ven-cobro.pendiente,
+.qr-ven-cobro-estado.pendiente {
+  background: #482329;
+  border: 1px solid #91474f;
+  color: #ffc3c8;
+}
+
+/* Venta anulada */
+.qr-ven-cobro.anulada,
+.qr-ven-cobro-estado.anulada {
+  background: #303238;
+  border: 1px solid #5b5e65;
+  color: #d1d2d5;
+}
