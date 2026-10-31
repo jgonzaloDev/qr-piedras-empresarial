@@ -1,4 +1,7 @@
 import { useState } from "react";
+
+import Ventas from "./Ventas";
+
 import {
   LayoutDashboard,
   Users,
@@ -45,7 +48,7 @@ const MODULOS = [
     nombre: "Ventas",
     descripcion: "Registro y seguimiento de operaciones.",
     icono: ShoppingCart,
-    disponible: false,
+    disponible: true,
   },
   {
     id: "pagos",
@@ -92,6 +95,10 @@ export default function Dashboard({ perfil, onLogout }) {
 
   if (modulo === "cotizaciones") {
     return <Cotizaciones perfil={perfil} onVolver={() => navegar("inicio")} />;
+  }
+
+  if (modulo === "ventas") {
+    return <Ventas onVolver={() => navegar("inicio")} />;
   }
 
   const moduloActual = MODULOS.find((item) => item.id === modulo);

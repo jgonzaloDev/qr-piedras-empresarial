@@ -1,0 +1,479 @@
+
+/* ========================================
+   QR PIEDRAS NATURALES - VENTAS
+======================================== */
+
+.qr-ven {
+  min-height: 100vh;
+  padding: 32px;
+  background: #111214;
+  color: #f5f5f5;
+  font-family: Inter, Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.qr-ven *,
+.qr-ven *::before,
+.qr-ven *::after {
+  box-sizing: border-box;
+}
+
+.qr-ven-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.qr-ven-brand {
+  display: block;
+  color: #ddb86c;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+
+.qr-ven h1 {
+  margin: 0 0 10px;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.qr-ven h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.qr-ven h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.qr-ven p {
+  color: #b9bac0;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.qr-ven button {
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 9px;
+  border: 1px solid #45474c;
+  background: #282a2f;
+  color: #f2f2f2;
+  padding: 11px 15px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.qr-ven button:hover:not(:disabled) {
+  background: #35383e;
+}
+
+.qr-ven button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.qr-ven .qr-ven-gold {
+  background: #ddb86c;
+  border-color: #ddb86c;
+  color: #161616;
+}
+
+.qr-ven .qr-ven-gold:hover:not(:disabled) {
+  background: #e8c780;
+}
+
+.qr-ven-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.qr-ven-kpis article {
+  background: #1d1f23;
+  border: 1px solid #393632;
+  border-radius: 13px;
+  padding: 22px;
+  min-width: 0;
+}
+
+.qr-ven-kpis span {
+  display: block;
+  color: #babac0;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.qr-ven-kpis strong {
+  display: block;
+  color: #ddb86c;
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+
+.qr-ven-nota {
+  font-size: 12px;
+  margin-bottom: 24px !important;
+}
+
+.qr-ven-panel {
+  background: #1c1e22;
+  border: 1px solid #393b40;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.qr-ven-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.qr-ven-panel-head > span {
+  color: #ddb86c;
+  font-size: 12px;
+}
+
+.qr-ven-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.qr-ven-tabs button {
+  flex: 1;
+  max-width: 220px;
+}
+
+.qr-ven-tabs button.activo {
+  background: rgba(221, 184, 108, 0.15);
+  border-color: #ddb86c;
+  color: #ddb86c;
+}
+
+.qr-ven label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  color: #e6e6e8;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.qr-ven input,
+.qr-ven select,
+.qr-ven textarea {
+  width: 100%;
+  min-height: 43px;
+  padding: 11px 13px;
+  background: #111316;
+  color: #f5f5f5;
+  border: 1px solid #40434a;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.qr-ven input:focus,
+.qr-ven select:focus,
+.qr-ven textarea:focus {
+  border-color: #ddb86c;
+  box-shadow: 0 0 0 2px rgba(221, 184, 108, 0.12);
+}
+
+.qr-ven input:disabled,
+.qr-ven select:disabled,
+.qr-ven input:read-only {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.qr-ven textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.qr-ven-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.qr-ven-grid .doble {
+  grid-column: span 2;
+}
+
+.qr-ven .qr-ven-check {
+  flex-direction: row;
+  align-items: center;
+  align-self: end;
+  min-height: 43px;
+}
+
+.qr-ven-check input {
+  width: 18px;
+  min-height: 18px;
+  accent-color: #ddb86c;
+}
+
+.qr-ven-cotizacion {
+  margin-bottom: 24px;
+}
+
+.qr-ven-cotizacion small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #b9bac0;
+}
+
+.qr-ven-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 20px 0 15px;
+}
+
+.qr-ven-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.qr-ven-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 850px;
+  font-size: 12px;
+}
+
+.qr-ven-table th {
+  padding: 14px 10px;
+  text-align: left;
+  color: #ddb86c;
+  background: #282a2f;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 1px solid #45474b;
+}
+
+.qr-ven-table td {
+  padding: 11px 8px;
+  border-bottom: 1px solid #34363b;
+  vertical-align: middle;
+}
+
+.qr-ven-table td input,
+.qr-ven-table td select {
+  min-width: 85px;
+  padding: 9px;
+  min-height: 39px;
+}
+
+.qr-ven-table td:first-child input {
+  min-width: 220px;
+}
+
+.qr-ven-table .importe {
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.qr-ven-table .qr-ven-danger {
+  background: #482329;
+  border-color: #71353c;
+  color: #ffc3c8;
+  font-size: 12px;
+  padding: 9px 12px;
+}
+
+.qr-ven-totales {
+  width: min(100%, 360px);
+  margin: 24px 0 28px auto;
+  padding: 20px;
+  border: 1px solid #393632;
+  background: #131518;
+  border-radius: 12px;
+}
+
+.qr-ven-totales div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  font-size: 13px;
+}
+
+.qr-ven-totales .principal {
+  border-top: 1px solid #685333;
+  margin-top: 9px;
+  padding-top: 17px;
+  color: #ddb86c;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.qr-ven-observaciones {
+  margin-bottom: 22px;
+}
+
+.qr-ven-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.qr-ven-buscar {
+  margin-bottom: 20px;
+}
+
+.qr-ven-estado {
+  min-width: 125px !important;
+}
+
+.qr-ven-fila-acciones {
+  display: flex;
+  gap: 7px;
+}
+
+.qr-ven-fila-acciones button {
+  font-size: 12px;
+  padding: 9px 11px;
+}
+
+.qr-ven-vacio {
+  padding: 35px !important;
+  text-align: center;
+  color: #a5a6aa;
+}
+
+.qr-ven-alert {
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 22px;
+  background: #20392d;
+  border: 1px solid #3e7955;
+  color: #b2e6c1;
+  font-size: 13px;
+}
+
+.qr-ven-alert.error {
+  background: #3c2227;
+  border-color: #91474f;
+  color: #ffc2c6;
+}
+
+.qr-ven-modal-fondo {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.qr-ven-modal {
+  background: #1d1f23;
+  border: 1px solid #5a4a31;
+  border-radius: 16px;
+  width: min(100%, 480px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+
+.qr-ven-modal h2 {
+  color: #ddb86c;
+  margin-bottom: 14px;
+}
+
+.qr-ven-modal form {
+  display: grid;
+  gap: 17px;
+  margin-top: 22px;
+}
+
+.qr-ven-footer {
+  color: #81838a;
+  text-align: center;
+  font-size: 12px;
+  padding: 25px 0 10px;
+}
+
+@media (max-width: 1000px) {
+  .qr-ven-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-ven-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .qr-ven-grid .doble {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 650px) {
+  .qr-ven {
+    padding: 15px;
+  }
+
+  .qr-ven-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .qr-ven h1 {
+    font-size: 24px;
+  }
+
+  .qr-ven-panel {
+    padding: 17px;
+  }
+
+  .qr-ven-panel-head,
+  .qr-ven-subhead {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .qr-ven-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-ven-grid .doble {
+    grid-column: span 1;
+  }
+
+  .qr-ven-kpis article {
+    padding: 15px;
+  }
+
+  .qr-ven-kpis strong {
+    font-size: 19px;
+  }
+
+  .qr-ven-tabs button {
+    flex: 1;
+  }
+
+  .qr-ven-acciones button {
+    flex: 1;
+  }
+}
