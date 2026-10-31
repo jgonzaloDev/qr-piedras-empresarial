@@ -546,6 +546,9 @@ export default function Ventas({ onVolver, onBack }) {
 
   const [form, setForm] = useState(formularioNuevo);
   const [busqueda, setBusqueda] = useState("");
+  const [vistaHistorial, setVistaHistorial] = useState("activas");
+  const [seleccionadas, setSeleccionadas] = useState([]);
+  const [procesandoLote, setProcesandoLote] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
   const [cargando, setCargando] = useState(true);
@@ -1163,6 +1166,32 @@ export default function Ventas({ onVolver, onBack }) {
     }
   };
 
+  // ARCHIVO Y ELIMINACIÓN CONTROLADA
+  const ejecutarLote = async (accion) => {
+    if (!seleccionadas.length || procesandoLote) return;
+    const etiqueta = accion === "archivar" ? "archivar" : accion === "restaurar" ? "restaurar" : "eliminar DEFINITIVAMENTE";
+    if (!window.confirm(`¿Deseas ${etiqueta} ${seleccionadas.length} venta(s)?`)) return;
+    if (accion === "eliminar") {
+      const confirmacion = window.prompt('Para confirmar, escribe ELIMINAR DEFINITIVAMENTE');
+      if (confirmacion !== 'ELIMINAR DEFINITIVAMENTE') return;
+    }
+    setProcesandoLote(true);
+    try {
+      const { data, error } = await supabase.rpc("gestionar_historial_ventas", {
+        p_ids: seleccionadas,
+        p_accion: accion,
+      });
+      if (error) throw error;
+      setSeleccionadas([]);
+      await cargarDatos();
+      avisar(`${data ?? seleccionadas.length} venta(s) procesada(s) correctamente.`);
+    } catch (error) {
+      avisar(error.message || "No se pudo completar la operación.", "error");
+    } finally {
+      setProcesandoLote(false);
+    }
+  };
+
   // ==================================================
   // BÚSQUEDA E INDICADORES
   // ==================================================
@@ -1170,6 +1199,7 @@ export default function Ventas({ onVolver, onBack }) {
   const filtradas = useMemo(
     () =>
       ventas.filter((venta) => {
+        if (Boolean(venta.archivada) !== (vistaHistorial === "archivadas")) return false;
         const cliente = clientes.find(
           (c) => c.id === venta.cliente_id
         );
@@ -1188,7 +1218,7 @@ export default function Ventas({ onVolver, onBack }) {
           busqueda.toLowerCase()
         );
       }),
-    [ventas, clientes, busqueda]
+    [ventas, clientes, busqueda, vistaHistorial]
   );
 
   const indicadores = useMemo(() => {
@@ -1842,6 +1872,19 @@ export default function Ventas({ onVolver, onBack }) {
           </button>
         </div>
 
+        <div className="qr-ven-acciones" style={{ flexWrap: "wrap", marginBottom: 14 }}>
+          <button type="button" className={vistaHistorial === "activas" ? "qr-ven-gold" : ""}
+            onClick={() => { setVistaHistorial("activas"); setSeleccionadas([]); }}>Activas</button>
+          <button type="button" className={vistaHistorial === "archivadas" ? "qr-ven-gold" : ""}
+            onClick={() => { setVistaHistorial("archivadas"); setSeleccionadas([]); }}>Archivadas</button>
+          <button type="button" disabled={!seleccionadas.length || procesandoLote}
+            onClick={() => ejecutarLote(vistaHistorial === "archivadas" ? "restaurar" : "archivar")}>
+            {vistaHistorial === "archivadas" ? "Restaurar" : "Archivar"} seleccionadas ({seleccionadas.length})
+          </button>
+          <button type="button" className="qr-ven-danger" disabled={!seleccionadas.length || procesandoLote}
+            onClick={() => ejecutarLote("eliminar")}>Eliminar definitivamente ({seleccionadas.length})</button>
+        </div>
+
         <input
           className="qr-ven-buscar"
           placeholder="Buscar número, cliente o estado..."
@@ -1855,6 +1898,9 @@ export default function Ventas({ onVolver, onBack }) {
           <table className="qr-ven-table">
             <thead>
               <tr>
+                <th><input type="checkbox" aria-label="Seleccionar todas las ventas visibles"
+                  checked={filtradas.length > 0 && filtradas.every(v => seleccionadas.includes(v.id))}
+                  onChange={e => setSeleccionadas(e.target.checked ? filtradas.map(v => v.id) : [])} /></th>
                 <th>Número</th>
                 <th>Cliente</th>
                 <th>Fecha</th>
@@ -1885,6 +1931,9 @@ export default function Ventas({ onVolver, onBack }) {
 
                 return (
                   <tr key={venta.id}>
+                    <td><input type="checkbox" aria-label={`Seleccionar ${numeroVenta(venta.numero)}`}
+                      checked={seleccionadas.includes(venta.id)}
+                      onChange={e => setSeleccionadas(prev => e.target.checked ? [...prev, venta.id] : prev.filter(id => id !== venta.id))} /></td>
                     <td>
                       {numeroVenta(
                         venta.numero
@@ -2028,7 +2077,7 @@ export default function Ventas({ onVolver, onBack }) {
               {!filtradas.length && (
                 <tr>
                   <td
-                    colSpan="10"
+                    colSpan="11"
                     className="qr-ven-vacio"
                   >
                     {cargando
