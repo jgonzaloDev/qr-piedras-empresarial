@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { jsPDF } from "jspdf";
 import {
   ArrowLeft,
@@ -10,24 +11,19 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
 import "./Contratos.css";
 
-// =====================================================
+// ======================================================
 // CONFIGURACIÓN
-// =====================================================
+// ======================================================
 
-const TIPOS = {
-  suministro: "Suministro de piedra natural",
-  suministro_instalacion: "Suministro e instalación de piedra natural",
-  servicio_instalacion: "Servicio de instalación de piedra natural",
-};
-
-const ESTADOS = {
-  borrador: "Borrador",
-  firmado: "Firmado",
-  cumplido: "Cumplido",
-  cancelado: "Cancelado",
+const fechaHoy = () => {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
 };
 
 const PROVEEDORES = {
@@ -39,7 +35,6 @@ const PROVEEDORES = {
     representante_legal: "",
     representante_dni: "",
   },
-
   personal: {
     tipo_proveedor: "persona_natural",
     proveedor_nombre: "Junior Gonzalo Quiñones Ramírez",
@@ -48,8 +43,7 @@ const PROVEEDORES = {
     representante_legal: "",
     representante_dni: "",
   },
-
-  otra_empresa: {
+  otro_empresa: {
     tipo_proveedor: "empresa",
     proveedor_nombre: "",
     proveedor_documento: "",
@@ -57,7 +51,6 @@ const PROVEEDORES = {
     representante_legal: "",
     representante_dni: "",
   },
-
   otra_persona: {
     tipo_proveedor: "persona_natural",
     proveedor_nombre: "",
@@ -68,64 +61,69 @@ const PROVEEDORES = {
   },
 };
 
-function fechaLocal() {
-  const hoy = new Date();
+const TIPOS = {
+  suministro: "Suministro de piedra natural",
+  suministro_instalacion: "Suministro e instalación de piedra natural",
+  servicio_instalacion: "Prestación de servicios de instalación",
+};
 
-  return [
-    hoy.getFullYear(),
-    String(hoy.getMonth() + 1).padStart(2, "0"),
-    String(hoy.getDate()).padStart(2, "0"),
-  ].join("-");
-}
+const ESTADOS = {
+  borrador: "Borrador",
+  firmado: "Firmado",
+  cumplido: "Cumplido",
+  cancelado: "Cancelado",
+};
 
-function crearFormulario() {
-  return {
-    proveedor_opcion: "gallito",
-    ...PROVEEDORES.gallito,
+const formularioInicial = () => ({
+  proveedor_opcion: "gallito",
+  ...PROVEEDORES.gallito,
 
-    cliente_id: "",
-    cliente_nombre: "",
-    cliente_tipo_documento: "",
-    cliente_numero_documento: "",
-    cliente_domicilio: "",
-    cliente_representante: "",
-    cliente_representante_dni: "",
+  cliente_id: "",
+  cliente_nombre: "",
+  cliente_tipo_documento: "",
+  cliente_numero_documento: "",
+  cliente_domicilio: "",
+  cliente_representante: "",
+  cliente_representante_dni: "",
 
-    tipo_contrato: "suministro",
-    objeto: "",
-    especificaciones_tecnicas: "",
+  tipo_contrato: "suministro",
+  objeto: "",
+  condiciones: "",
+  especificaciones_tecnicas: "",
 
-    moneda: "PEN",
-    importe: "",
-    adelanto: "0",
-    forma_pago: "",
-    incluye_igv: true,
+  moneda: "PEN",
+  importe: "",
+  adelanto: "0",
+  incluye_igv: true,
+  forma_pago: "",
 
-    fecha_contrato: fechaLocal(),
-    fecha_entrega: "",
-    lugar_entrega: "",
-    lugar_firma: "Lima, Perú",
+  fecha_contrato: fechaHoy(),
+  fecha_entrega: "",
+  lugar_entrega: "",
+  lugar_firma: "Lima, Perú",
 
-    obligaciones_proveedor: "",
-    obligaciones_cliente: "",
-    garantia: "",
-    penalidades: "",
-    solucion_controversias: "",
-    condiciones: "",
-    observaciones: "",
-  };
-}
+  obligaciones_proveedor: "",
+  obligaciones_cliente: "",
+  garantia: "",
+  penalidades: "",
+  solucion_controversias: "",
+  observaciones: "",
+});
 
-function codigoContrato(numero) {
+// ======================================================
+// FUNCIONES AUXILIARES
+// ======================================================
+
+function codigo(numero) {
   return `CONT-${String(numero || 0).padStart(6, "0")}`;
 }
 
-function formatoFecha(fecha) {
-  if (!fecha) return "No especificada";
+function formatoFecha(valor) {
+  if (!valor) return "No especificada";
 
-  const partes = String(fecha).slice(0, 10).split("-");
+  const partes = String(valor).slice(0, 10).split("-");
 
-  if (partes.length !== 3) return String(fecha);
+  if (partes.length !== 3) return valor;
 
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
@@ -133,26 +131,31 @@ function formatoFecha(fecha) {
 function dinero(valor, moneda = "PEN") {
   const simbolo = moneda === "USD" ? "US$" : "S/";
 
-  return (
-    simbolo +
-    " " +
-    Number(valor || 0).toLocaleString("es-PE", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  );
+  return `${simbolo} ${Number(valor || 0).toLocaleString("es-PE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
-function valorTexto(valor, defecto = "No especificado") {
+function texto(valor, defecto = "No especificado") {
   const limpio = String(valor ?? "").trim();
   return limpio || defecto;
 }
 
-// =====================================================
-// COMPONENTES ESTABLES
-// ESTÁN FUERA DEL COMPONENTE PRINCIPAL
-// PARA EVITAR QUE LOS CAMPOS PIERDAN EL FOCO
-// =====================================================
+function validarDocumento(tipo, documento) {
+  const limpio = String(documento || "").trim();
+
+  if (tipo === "empresa") {
+    return /^\d{11}$/.test(limpio);
+  }
+
+  return /^\d{8}$/.test(limpio);
+}
+
+// ======================================================
+// COMPONENTES ESTABLES DEL FORMULARIO
+// DEFINIDOS FUERA DE CONTRATOS PARA NO PERDER EL FOCO
+// ======================================================
 
 function Campo({
   titulo,
@@ -171,10 +174,10 @@ function Campo({
       <span>{titulo}</span>
 
       <input
-        type={tipo}
         name={nombre}
-        value={valor ?? ""}
+        type={tipo}
         required={requerido}
+        value={valor ?? ""}
         placeholder={placeholder}
         min={min}
         step={step}
@@ -199,19 +202,19 @@ function Area({
 
       <textarea
         name={nombre}
-        value={valor ?? ""}
-        required={requerido}
-        placeholder={placeholder}
         rows={4}
+        required={requerido}
+        value={valor ?? ""}
+        placeholder={placeholder}
         onChange={(e) => onCambiar(nombre, e.target.value)}
       />
     </label>
   );
 }
 
-// =====================================================
-// PDF FORMAL
-// =====================================================
+// ======================================================
+// GENERACIÓN DE PDF
+// ======================================================
 
 function generarPDF(contrato) {
   const pdf = new jsPDF({
@@ -224,10 +227,10 @@ function generarPDF(contrato) {
   const ancho = 166;
   let y = 24;
 
-  function espacio(altura = 15) {
-    if (y + altura > 270) {
+  function comprobarEspacio(altura = 20) {
+    if (y + altura > 269) {
       pdf.addPage();
-      y = 24;
+      y = 25;
     }
   }
 
@@ -238,89 +241,50 @@ function generarPDF(contrato) {
 
     const lineas = pdf.splitTextToSize(String(contenido || ""), ancho);
 
-    const altoLinea = 5.5;
+    comprobarEspacio(lineas.length * 5.5 + 8);
 
-    for (const linea of lineas) {
-      espacio(altoLinea);
-      pdf.text(linea, margen, y);
-      y += altoLinea;
-    }
-
-    y += 5;
+    pdf.text(lineas, margen, y);
+    y += lineas.length * 5.5 + 7;
   }
 
   function clausula(titulo, contenido) {
-    espacio(17);
+    comprobarEspacio(25);
 
     pdf.setFont("times", "bold");
     pdf.setFontSize(11);
     pdf.setTextColor(20, 20, 20);
+    pdf.text(titulo, margen, y);
 
-    const lineas = pdf.splitTextToSize(titulo, ancho);
-
-    for (const linea of lineas) {
-      espacio(6);
-      pdf.text(linea, margen, y);
-      y += 6;
-    }
-
-    y += 2;
+    y += 8;
     parrafo(contenido);
   }
 
-  const esEmpresa = contrato.tipo_proveedor === "empresa";
+  const empresa = contrato.tipo_proveedor === "empresa";
 
-  const proveedor = valorTexto(contrato.proveedor_nombre);
+  const nombreProveedor = texto(contrato.proveedor_nombre);
 
-  const cliente = valorTexto(contrato.cliente_nombre);
-
-  const proveedorIdentificacion = esEmpresa
-    ? `${proveedor}, con RUC N.º ${valorTexto(
-        contrato.proveedor_documento,
-      )}, domiciliada en ${valorTexto(
-        contrato.proveedor_domicilio,
-      )}, representada por ${valorTexto(
-        contrato.representante_legal,
-      )}, identificado(a) con DNI N.º ${valorTexto(contrato.representante_dni)}`
-    : `${proveedor}, identificado(a) con DNI N.º ${valorTexto(
-        contrato.proveedor_documento,
-      )}, con domicilio en ${valorTexto(contrato.proveedor_domicilio)}`;
-
-  const clienteIdentificacion =
-    `${cliente}, identificado(a) con ` +
-    `${valorTexto(
-      contrato.cliente_tipo_documento,
-      "documento",
-    )} N.º ${valorTexto(
-      contrato.cliente_numero_documento,
-    )}, con domicilio en ${valorTexto(contrato.cliente_domicilio)}` +
-    (contrato.cliente_representante
-      ? `, representado(a) por ${contrato.cliente_representante}, con DNI N.º ${valorTexto(
-          contrato.cliente_representante_dni,
-        )}`
-      : "");
+  const nombreCliente = texto(contrato.cliente_nombre);
 
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.setTextColor(155, 116, 55);
-
-  pdf.text("CONTRATO COMERCIAL", 105, y, { align: "center" });
+  pdf.setFontSize(11);
+  pdf.setTextColor(157, 116, 52);
+  pdf.text("QR PIEDRAS NATURALES", 105, y, { align: "center" });
 
   y += 10;
 
-  pdf.setDrawColor(185, 150, 85);
+  pdf.setDrawColor(175, 143, 80);
   pdf.line(margen, y, 188, y);
 
-  y += 11;
+  y += 12;
 
-  const titulo = `CONTRATO DE ${valorTexto(
+  const titulo = `CONTRATO DE ${texto(
     TIPOS[contrato.tipo_contrato],
     "SUMINISTRO",
   ).toUpperCase()}`;
 
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(12.5);
-  pdf.setTextColor(20, 20, 20);
+  pdf.setFontSize(13);
+  pdf.setTextColor(25, 25, 25);
 
   const lineasTitulo = pdf.splitTextToSize(titulo, 155);
 
@@ -328,109 +292,114 @@ function generarPDF(contrato) {
     align: "center",
   });
 
-  y += lineasTitulo.length * 6 + 6;
+  y += lineasTitulo.length * 6 + 5;
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
 
-  pdf.text(`Contrato N.º ${codigoContrato(contrato.numero)}`, 105, y, {
+  pdf.text(`Contrato N.º ${codigo(contrato.numero)}`, 105, y, {
     align: "center",
   });
 
-  y += 13;
+  y += 14;
+
+  const identificacionProveedor = empresa
+    ? `${nombreProveedor}, con RUC N.º ${texto(
+        contrato.proveedor_documento,
+      )}, con domicilio en ${texto(
+        contrato.proveedor_domicilio,
+      )}, debidamente representada por ${texto(
+        contrato.representante_legal,
+      )}, identificado(a) con DNI N.º ${texto(contrato.representante_dni)}`
+    : `${nombreProveedor}, identificado(a) con DNI N.º ${texto(
+        contrato.proveedor_documento,
+      )}, con domicilio en ${texto(contrato.proveedor_domicilio)}`;
+
+  const identificacionCliente =
+    `${nombreCliente}, identificado(a) con ` +
+    `${texto(contrato.cliente_tipo_documento, "documento")} N.º ${texto(
+      contrato.cliente_numero_documento,
+    )}, con domicilio en ${texto(contrato.cliente_domicilio)}` +
+    (contrato.cliente_representante
+      ? `, representado(a) por ${contrato.cliente_representante}, con DNI N.º ${texto(
+          contrato.cliente_representante_dni,
+        )}`
+      : "");
 
   parrafo(
-    "Conste por el presente documento el contrato que " +
-      "celebran, de una parte, " +
-      proveedorIdentificacion +
-      ", a quien en adelante se denominará EL PROVEEDOR; " +
-      "y, de la otra parte, " +
-      clienteIdentificacion +
-      ", a quien en adelante se denominará EL CONTRATANTE; " +
-      "en los términos y condiciones siguientes:",
+    `Conste por el presente documento el contrato celebrado entre ` +
+      `${identificacionProveedor}, en adelante EL PROVEEDOR; ` +
+      `y ${identificacionCliente}, en adelante EL CONTRATANTE; ` +
+      `bajo las siguientes cláusulas:`,
   );
 
-  clausula("PRIMERA: OBJETO DEL CONTRATO", valorTexto(contrato.objeto));
+  clausula("PRIMERA: OBJETO DEL CONTRATO", texto(contrato.objeto));
 
   clausula(
     "SEGUNDA: ESPECIFICACIONES TÉCNICAS",
-    valorTexto(contrato.especificaciones_tecnicas),
+    texto(contrato.especificaciones_tecnicas),
   );
-
-  const importe = Number(contrato.importe || 0);
-  const adelanto = Number(contrato.adelanto || 0);
 
   clausula(
     "TERCERA: PRECIO Y FORMA DE PAGO",
-    `El importe total pactado asciende a ${dinero(
-      importe,
+    `El importe contractual asciende a ${dinero(
+      contrato.importe,
       contrato.moneda,
-    )}. Se establece un adelanto de ${dinero(
-      adelanto,
+    )}. El adelanto pactado es ${dinero(
+      contrato.adelanto,
       contrato.moneda,
     )}, quedando un saldo de ${dinero(
-      importe - adelanto,
+      Number(contrato.importe || 0) - Number(contrato.adelanto || 0),
       contrato.moneda,
-    )}. Forma de pago: ${valorTexto(contrato.forma_pago)}. ${
-      contrato.incluye_igv
-        ? "El importe indicado incluye IGV, cuando resulte aplicable."
-        : "El importe indicado no incluye IGV, cuando resulte aplicable."
-    }`,
+    )}. Forma de pago: ${texto(
+      contrato.forma_pago,
+    )}. ${contrato.incluye_igv === false ? "El importe no incluye IGV, cuando resulte aplicable." : "El importe incluye IGV, cuando resulte aplicable."} Los comprobantes de pago se emitirán conforme a la normativa aplicable.`,
   );
 
   clausula(
     "CUARTA: PLAZO Y LUGAR DE ENTREGA",
-    `La entrega o ejecución se realizará en ${valorTexto(
+    `El lugar de entrega o ejecución será ${texto(
       contrato.lugar_entrega,
-    )}. Fecha prevista: ${formatoFecha(
+    )}. La fecha prevista es ${formatoFecha(
       contrato.fecha_entrega,
-    )}. Cualquier modificación del plazo deberá ser acordada por escrito.`,
+    )}. Cualquier modificación deberá acordarse por escrito.`,
   );
 
   clausula(
     "QUINTA: OBLIGACIONES DEL PROVEEDOR",
-    valorTexto(contrato.obligaciones_proveedor),
+    texto(contrato.obligaciones_proveedor),
   );
 
   clausula(
     "SEXTA: OBLIGACIONES DEL CONTRATANTE",
-    valorTexto(contrato.obligaciones_cliente),
+    texto(contrato.obligaciones_cliente),
   );
 
   clausula(
     "SÉPTIMA: RECEPCIÓN Y CONFORMIDAD",
-    "Las partes podrán dejar constancia de la entrega " +
-      "de materiales o de la ejecución de los trabajos " +
-      "mediante acta de recepción, guía de remisión, " +
-      "constancia de conformidad u otro documento acordado. " +
-      "Las observaciones deberán comunicarse por escrito.",
+    "La recepción de materiales o trabajos podrá documentarse mediante acta, constancia u otro documento acordado por las partes. Las observaciones deberán comunicarse por escrito para su evaluación conforme a las condiciones pactadas.",
   );
 
-  clausula("OCTAVA: GARANTÍAS", valorTexto(contrato.garantia));
+  clausula("OCTAVA: GARANTÍAS", texto(contrato.garantia));
 
   clausula(
     "NOVENA: PENALIDADES E INCUMPLIMIENTO",
-    valorTexto(
+    texto(
       contrato.penalidades,
-      "No se han pactado penalidades específicas.",
+      "No se han establecido penalidades específicas.",
     ),
   );
 
   clausula(
-    "DÉCIMA: MODIFICACIONES CONTRACTUALES",
-    "Toda modificación del objeto, precio, alcance, " +
-      "materiales o plazo de ejecución deberá constar " +
-      "por escrito y contar con la aceptación de ambas partes.",
+    "DÉCIMA: MODIFICACIONES Y RESOLUCIÓN",
+    "Toda modificación del alcance, precio o plazo deberá constar por escrito y contar con aceptación de ambas partes. La resolución contractual se sujetará a lo pactado y a la normativa aplicable.",
   );
 
   clausula(
     "DÉCIMA PRIMERA: SOLUCIÓN DE CONTROVERSIAS",
-    valorTexto(
+    texto(
       contrato.solucion_controversias,
-      "Las partes procurarán resolver sus diferencias " +
-        "mediante trato directo. De no alcanzarse un acuerdo, " +
-        "podrán acudir a los mecanismos legales correspondientes " +
-        "conforme a la legislación peruana.",
+      "Las partes procurarán resolver sus diferencias mediante trato directo y, de no llegar a un acuerdo, acudirán a las autoridades competentes conforme a la legislación peruana.",
     ),
   );
 
@@ -442,21 +411,23 @@ function generarPDF(contrato) {
     clausula("OBSERVACIONES", contrato.observaciones);
   }
 
+  comprobarEspacio(70);
+
   parrafo(
-    `En señal de conformidad, las partes suscriben el ` +
-      `presente contrato en ${valorTexto(
-        contrato.lugar_firma,
-        "Lima, Perú",
-      )}, con fecha ${formatoFecha(contrato.fecha_contrato)}.`,
+    `En señal de conformidad, las partes suscriben el presente contrato en ${texto(
+      contrato.lugar_firma,
+    )}, con fecha ${formatoFecha(
+      contrato.fecha_firma || contrato.fecha_contrato,
+    )}.`,
   );
 
-  // Mantener juntas las firmas.
-  espacio(58);
-  y += 16;
+  comprobarEspacio(50);
 
-  pdf.setDrawColor(65, 65, 65);
-  pdf.line(23, y, 93, y);
-  pdf.line(117, y, 187, y);
+  y += 17;
+
+  pdf.setDrawColor(70, 70, 70);
+  pdf.line(24, y, 92, y);
+  pdf.line(118, y, 186, y);
 
   y += 7;
 
@@ -476,54 +447,41 @@ function generarPDF(contrato) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
 
-  const firmaProveedor = esEmpresa
-    ? valorTexto(contrato.representante_legal)
-    : proveedor;
-
-  const firmaIzquierda = pdf.splitTextToSize(firmaProveedor, 65);
-
-  const firmaDerecha = pdf.splitTextToSize(
-    contrato.cliente_representante || cliente,
-    65,
-  );
-
-  pdf.text(firmaIzquierda, 58, y, {
+  pdf.text(pdf.splitTextToSize(nombreProveedor, 65), 58, y, {
     align: "center",
   });
 
-  pdf.text(firmaDerecha, 152, y, {
-    align: "center",
-  });
+  pdf.text(pdf.splitTextToSize(nombreCliente, 65), 152, y, { align: "center" });
 
-  const totalPaginas = pdf.getNumberOfPages();
+  const paginas = pdf.getNumberOfPages();
 
-  for (let pagina = 1; pagina <= totalPaginas; pagina++) {
-    pdf.setPage(pagina);
+  for (let i = 1; i <= paginas; i++) {
+    pdf.setPage(i);
 
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(110, 110, 110);
 
     pdf.text(
-      `${codigoContrato(contrato.numero)} - Página ${pagina} de ${totalPaginas}`,
+      `${codigo(contrato.numero)} - Página ${i} de ${paginas}`,
       105,
       287,
       { align: "center" },
     );
   }
 
-  pdf.save(`${codigoContrato(contrato.numero)}.pdf`);
+  pdf.save(`${codigo(contrato.numero)}.pdf`);
 }
 
-// =====================================================
+// ======================================================
 // COMPONENTE PRINCIPAL
-// =====================================================
+// ======================================================
 
 export default function Contratos({ perfil, onVolver }) {
   const [contratos, setContratos] = useState([]);
   const [clientes, setClientes] = useState([]);
 
-  const [formulario, setFormulario] = useState(crearFormulario);
+  const [formulario, setFormulario] = useState(formularioInicial);
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
@@ -536,63 +494,49 @@ export default function Contratos({ perfil, onVolver }) {
     ["administrador", "vendedor"].includes(perfil?.rol) &&
     perfil?.activo !== false;
 
-  const esAdministrador =
-    perfil?.rol === "administrador" && perfil?.activo !== false;
+  const esAdmin = perfil?.rol === "administrador" && perfil?.activo !== false;
 
-  // ===================================================
-  // CONSULTAR DATOS
-  // ===================================================
+  // ====================================================
+  // CARGAR DATOS
+  // ====================================================
 
   const cargarDatos = useCallback(async () => {
     setCargando(true);
 
-    try {
-      const [respuestaContratos, respuestaClientes] = await Promise.all([
-        supabase.from("contratos").select("*").order("numero", {
-          ascending: false,
-        }),
+    const [rContratos, rClientes] = await Promise.all([
+      supabase.from("contratos").select("*").order("numero", {
+        ascending: false,
+      }),
 
-        supabase
-          .from("clientes")
-          .select(
-            "id,nombre_razon_social,tipo_documento,numero_documento,direccion",
-          )
-          .order("nombre_razon_social"),
-      ]);
+      supabase
+        .from("clientes")
+        .select(
+          "id,nombre_razon_social,tipo_documento,numero_documento,direccion",
+        )
+        .order("nombre_razon_social"),
+    ]);
 
-      if (respuestaContratos.error) {
-        throw respuestaContratos.error;
-      }
-
-      if (respuestaClientes.error) {
-        throw respuestaClientes.error;
-      }
-
-      setContratos(respuestaContratos.data || []);
-      setClientes(respuestaClientes.data || []);
-      setMensaje("");
-    } catch (error) {
-      setMensaje(error.message || "No fue posible cargar los datos.");
-    } finally {
-      setCargando(false);
+    if (rContratos.error || rClientes.error) {
+      setMensaje(rContratos.error?.message || rClientes.error?.message);
+    } else {
+      setContratos(rContratos.data || []);
+      setClientes(rClientes.data || []);
     }
+
+    setCargando(false);
   }, []);
 
   useEffect(() => {
-    // Se difiere la llamada para evitar el aviso
-    // de actualización síncrona dentro del efecto.
-    const iniciar = () => {
+    // Iniciar la consulta después del montaje del componente.
+    const temporizador = setTimeout(() => {
       void cargarDatos();
-    };
-
-    const id = setTimeout(iniciar, 0);
-
-    return () => clearTimeout(id);
+    }, 0);
+    return () => clearTimeout(temporizador);
   }, [cargarDatos]);
 
-  // ===================================================
-  // ACTUALIZAR FORMULARIO
-  // ===================================================
+  // ====================================================
+  // ACTUALIZAR CAMPOS
+  // ====================================================
 
   function actualizar(nombre, valor) {
     setFormulario((anterior) => ({
@@ -601,26 +545,26 @@ export default function Contratos({ perfil, onVolver }) {
     }));
   }
 
-  // ===================================================
-  // PROVEEDORES
-  // ===================================================
+  // ====================================================
+  // SELECCIONAR O ESCRIBIR PROVEEDOR
+  // ====================================================
 
   function seleccionarProveedor(opcion) {
-    const proveedor = PROVEEDORES[opcion] || PROVEEDORES.gallito;
+    const datos = PROVEEDORES[opcion] || PROVEEDORES.gallito;
 
     setFormulario((anterior) => ({
       ...anterior,
-      ...proveedor,
+      ...datos,
       proveedor_opcion: opcion,
     }));
   }
 
-  // ===================================================
-  // CLIENTES
-  // ===================================================
+  // ====================================================
+  // SELECCIONAR CLIENTE
+  // ====================================================
 
   function seleccionarCliente(id) {
-    const cliente = clientes.find((item) => item.id === id);
+    const cliente = clientes.find((c) => c.id === id);
 
     if (!cliente) {
       setFormulario((anterior) => ({
@@ -631,7 +575,6 @@ export default function Contratos({ perfil, onVolver }) {
         cliente_numero_documento: "",
         cliente_domicilio: "",
       }));
-
       return;
     }
 
@@ -645,37 +588,35 @@ export default function Contratos({ perfil, onVolver }) {
     }));
   }
 
-  // ===================================================
-  // BUSCAR CONTRATOS
-  // ===================================================
+  // ====================================================
+  // FILTROS
+  // ====================================================
 
-  const contratosFiltrados = useMemo(() => {
-    const termino = busqueda.toLowerCase().trim();
+  const filtrados = useMemo(() => {
+    const q = busqueda.toLowerCase().trim();
 
-    if (!termino) return contratos;
-
-    return contratos.filter((contrato) => {
+    return contratos.filter((c) => {
       const contenido = [
-        codigoContrato(contrato.numero),
-        contrato.cliente_nombre,
-        contrato.proveedor_nombre,
-        contrato.objeto,
-        contrato.estado,
-        TIPOS[contrato.tipo_contrato],
+        codigo(c.numero),
+        c.cliente_nombre,
+        c.proveedor_nombre,
+        c.objeto,
+        c.estado,
+        TIPOS[c.tipo_contrato],
       ]
         .join(" ")
         .toLowerCase();
 
-      return contenido.includes(termino);
+      return contenido.includes(q);
     });
   }, [contratos, busqueda]);
 
-  // ===================================================
-  // GUARDAR
-  // ===================================================
+  // ====================================================
+  // GUARDAR CONTRATO
+  // ====================================================
 
-  async function guardarContrato(evento) {
-    evento.preventDefault();
+  async function guardar(e) {
+    e.preventDefault();
 
     if (!puedeCrear || guardando) return;
 
@@ -694,21 +635,17 @@ export default function Contratos({ perfil, onVolver }) {
       return;
     }
 
-    const documentoProveedor = formulario.proveedor_documento.trim();
-
     if (
-      formulario.tipo_proveedor === "empresa" &&
-      !/^\d{11}$/.test(documentoProveedor)
+      !validarDocumento(
+        formulario.tipo_proveedor,
+        formulario.proveedor_documento,
+      )
     ) {
-      setMensaje("El RUC debe contener 11 dígitos.");
-      return;
-    }
-
-    if (
-      formulario.tipo_proveedor === "persona_natural" &&
-      !/^\d{8}$/.test(documentoProveedor)
-    ) {
-      setMensaje("El DNI debe contener 8 dígitos.");
+      setMensaje(
+        formulario.tipo_proveedor === "empresa"
+          ? "El RUC del proveedor debe tener 11 dígitos."
+          : "El DNI del proveedor debe tener 8 dígitos.",
+      );
       return;
     }
 
@@ -717,7 +654,7 @@ export default function Contratos({ perfil, onVolver }) {
       (!formulario.representante_legal.trim() ||
         !/^\d{8}$/.test(formulario.representante_dni.trim()))
     ) {
-      setMensaje("Completa el representante legal y su DNI.");
+      setMensaje("Completa el representante legal y su DNI de 8 dígitos.");
       return;
     }
 
@@ -726,7 +663,7 @@ export default function Contratos({ perfil, onVolver }) {
       !formulario.cliente_numero_documento.trim() ||
       !formulario.cliente_domicilio.trim()
     ) {
-      setMensaje("Completa los datos del cliente.");
+      setMensaje("Completa la identificación y domicilio del cliente.");
       return;
     }
 
@@ -740,71 +677,55 @@ export default function Contratos({ perfil, onVolver }) {
       adelanto < 0 ||
       adelanto > importe
     ) {
-      setMensaje("Verifica el importe total y el adelanto.");
+      setMensaje(
+        "El importe debe ser mayor a cero y el adelanto no puede superar el importe.",
+      );
       return;
     }
 
     setGuardando(true);
 
     try {
-      const { data: sesion, error: errorSesion } =
+      const { data: usuarioData, error: usuarioError } =
         await supabase.auth.getUser();
 
-      if (errorSesion || !sesion?.user) {
-        throw new Error("Debes iniciar sesión nuevamente.");
+      if (usuarioError || !usuarioData?.user) {
+        throw new Error("No se encontró una sesión válida.");
       }
 
-      const { data: ultimo, error: errorNumero } = await supabase
-        .from("contratos")
-        .select("numero")
-        .order("numero", {
-          ascending: false,
-        })
-        .limit(1);
-
-      if (errorNumero) {
-        throw errorNumero;
-      }
-
-      const numero = Number(ultimo?.[0]?.numero || 0) + 1;
-
-      const datosFormulario = {
-        ...formulario,
-      };
-
-      // Este dato solo se utiliza en el formulario.
+      // La columna numero es GENERATED ALWAYS AS IDENTITY.
+      // Nunca se envía desde React: PostgreSQL la asigna.
+      const datosFormulario = { ...formulario };
       delete datosFormulario.proveedor_opcion;
 
       const datos = {
         ...datosFormulario,
-        numero,
         importe,
         adelanto,
-        fecha_entrega: formulario.fecha_entrega || null,
         estado: "borrador",
-        creado_por: sesion.user.id,
+        creado_por: usuarioData.user.id,
+        fecha_entrega: formulario.fecha_entrega || null,
+        fecha_contrato: formulario.fecha_contrato || null,
         cotizacion_id: null,
         venta_id: null,
       };
 
-      const { error } = await supabase.from("contratos").insert(datos);
+      const { data: contratoGuardado, error } = await supabase
+        .from("contratos")
+        .insert(datos)
+        .select("id,numero")
+        .single();
 
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error(
-            "El número de contrato ya existe. Actualiza e intenta nuevamente.",
-          );
-        }
+      if (error) throw error;
 
-        throw error;
-      }
-
-      setFormulario(crearFormulario());
+      setFormulario(formularioInicial());
       setMostrarFormulario(false);
 
       await cargarDatos();
 
-      setMensaje(`Contrato ${codigoContrato(numero)} guardado correctamente.`);
+      setMensaje(
+        `Contrato ${codigo(contratoGuardado.numero)} registrado correctamente.`,
+      );
     } catch (error) {
       setMensaje(error.message || "No fue posible guardar el contrato.");
     } finally {
@@ -812,40 +733,46 @@ export default function Contratos({ perfil, onVolver }) {
     }
   }
 
-  // ===================================================
+  // ====================================================
   // CAMBIAR ESTADO
-  // ===================================================
+  // ====================================================
 
-  async function cambiarEstado(contrato, estado) {
-    if (!esAdministrador) return;
+  async function cambiarEstado(contrato, nuevoEstado) {
+    if (!esAdmin) return;
 
-    const confirmado = window.confirm(
-      `¿Cambiar ${codigoContrato(contrato.numero)} a "${ESTADOS[estado]}"?`,
+    const confirmar = window.confirm(
+      `¿Deseas cambiar ${codigo(
+        contrato.numero,
+      )} al estado "${ESTADOS[nuevoEstado]}"?`,
     );
 
-    if (!confirmado) return;
+    if (!confirmar) return;
 
     const { error } = await supabase
       .from("contratos")
-      .update({ estado })
+      .update({
+        estado: nuevoEstado,
+        actualizado_en: new Date().toISOString(),
+      })
       .eq("id", contrato.id);
 
     if (error) {
       setMensaje(error.message);
-      return;
+    } else {
+      await cargarDatos();
+      setMensaje("Estado actualizado correctamente.");
     }
-
-    await cargarDatos();
-    setMensaje("Estado actualizado correctamente.");
   }
 
-  // ===================================================
+  // ====================================================
   // INTERFAZ
-  // ===================================================
+  // ====================================================
 
   return (
     <div className="qc-pagina">
       <div className="qc-contenedor">
+        {/* ENCABEZADO */}
+
         <header className="qc-encabezado">
           <div>
             <button type="button" className="qc-volver" onClick={onVolver}>
@@ -858,10 +785,7 @@ export default function Contratos({ perfil, onVolver }) {
               Gestión de contratos
             </h1>
 
-            <p>
-              Contratos comerciales, documentos formales y seguimiento
-              contractual.
-            </p>
+            <p>Contratos comerciales, documentación formal y seguimiento.</p>
           </div>
 
           <div className="qc-acciones">
@@ -874,7 +798,7 @@ export default function Contratos({ perfil, onVolver }) {
               <button
                 type="button"
                 className="qc-boton qc-primario"
-                onClick={() => setMostrarFormulario((anterior) => !anterior)}
+                onClick={() => setMostrarFormulario(!mostrarFormulario)}
               >
                 {mostrarFormulario ? <X size={17} /> : <Plus size={17} />}
 
@@ -885,6 +809,8 @@ export default function Contratos({ perfil, onVolver }) {
         </header>
 
         {mensaje && <div className="qc-mensaje">{mensaje}</div>}
+
+        {/* INDICADORES */}
 
         <section className="qc-indicadores">
           <div>
@@ -914,38 +840,38 @@ export default function Contratos({ perfil, onVolver }) {
           </div>
         </section>
 
-        {/* ============================================
-            FORMULARIO
-            ============================================ */}
+        {/* FORMULARIO */}
 
         {mostrarFormulario && puedeCrear && (
-          <form className="qc-panel" onSubmit={guardarContrato}>
+          <form className="qc-panel" onSubmit={guardar}>
             <h2>Registrar nuevo contrato</h2>
+
+            {/* 1. PROVEEDOR */}
 
             <h3>1. Identificación del proveedor</h3>
 
             <div className="qc-grid">
               <label className="qc-campo qc-ancho">
-                <span>Emitir contrato a nombre de</span>
+                <span>Seleccionar proveedor o ingresar uno nuevo</span>
 
                 <select
                   value={formulario.proveedor_opcion}
                   onChange={(e) => seleccionarProveedor(e.target.value)}
                 >
                   <option value="gallito">
-                    Gallito y Piedra S.A.C. — Persona jurídica
+                    Gallito y Piedra S.A.C. — Empresa registrada
                   </option>
 
                   <option value="personal">
                     Junior Gonzalo Quiñones Ramírez — Persona natural
                   </option>
 
-                  <option value="otra_empresa">
+                  <option value="otro_empresa">
                     Otra empresa — Digitar razón social
                   </option>
 
                   <option value="otra_persona">
-                    Otra persona natural — Digitar nombre
+                    Otra persona natural — Digitar nombre completo
                   </option>
                 </select>
               </label>
@@ -953,13 +879,14 @@ export default function Contratos({ perfil, onVolver }) {
               <Campo
                 titulo={
                   formulario.tipo_proveedor === "empresa"
-                    ? "Nombre o razón social"
-                    : "Nombre completo"
+                    ? "Razón social de la empresa"
+                    : "Nombre completo de la persona natural"
                 }
                 nombre="proveedor_nombre"
                 valor={formulario.proveedor_nombre}
                 onCambiar={actualizar}
                 requerido
+                placeholder="Escribe el nombre o razón social"
               />
 
               <Campo
@@ -977,6 +904,7 @@ export default function Contratos({ perfil, onVolver }) {
                 valor={formulario.proveedor_domicilio}
                 onCambiar={actualizar}
                 requerido
+                placeholder="Dirección completa"
               />
 
               {formulario.tipo_proveedor === "empresa" && (
@@ -1001,11 +929,13 @@ export default function Contratos({ perfil, onVolver }) {
               )}
             </div>
 
+            {/* 2. CLIENTE */}
+
             <h3>2. Identificación del cliente</h3>
 
             <div className="qc-grid">
               <label className="qc-campo qc-ancho">
-                <span>Seleccionar cliente</span>
+                <span>Seleccionar cliente registrado</span>
 
                 <select
                   required
@@ -1055,21 +985,23 @@ export default function Contratos({ perfil, onVolver }) {
               />
 
               <Campo
-                titulo="Representante del cliente (opcional)"
+                titulo="Representante del cliente (si corresponde)"
                 nombre="cliente_representante"
                 valor={formulario.cliente_representante}
                 onCambiar={actualizar}
               />
 
               <Campo
-                titulo="DNI del representante (opcional)"
+                titulo="DNI del representante del cliente"
                 nombre="cliente_representante_dni"
                 valor={formulario.cliente_representante_dni}
                 onCambiar={actualizar}
               />
             </div>
 
-            <h3>3. Modalidad contractual</h3>
+            {/* 3. MODALIDAD */}
+
+            <h3>3. Modalidad y objeto contractual</h3>
 
             <div className="qc-grid">
               <label className="qc-campo qc-ancho">
@@ -1079,8 +1011,8 @@ export default function Contratos({ perfil, onVolver }) {
                   value={formulario.tipo_contrato}
                   onChange={(e) => actualizar("tipo_contrato", e.target.value)}
                 >
-                  {Object.entries(TIPOS).map(([clave, nombre]) => (
-                    <option key={clave} value={clave}>
+                  {Object.entries(TIPOS).map(([id, nombre]) => (
+                    <option key={id} value={id}>
                       {nombre}
                     </option>
                   ))}
@@ -1093,18 +1025,20 @@ export default function Contratos({ perfil, onVolver }) {
                 valor={formulario.objeto}
                 onCambiar={actualizar}
                 requerido
-                placeholder="Describir el trabajo o suministro contratado"
+                placeholder="Describe el suministro o servicio contratado"
               />
 
               <Area
-                titulo="Especificaciones técnicas de los materiales"
+                titulo="Especificaciones técnicas"
                 nombre="especificaciones_tecnicas"
                 valor={formulario.especificaciones_tecnicas}
                 onCambiar={actualizar}
                 requerido
-                placeholder="Tipo de piedra, dimensiones, espesor, acabado, metraje, tolerancias y condiciones técnicas"
+                placeholder="Material, formato, espesor, acabado, metraje y demás especificaciones"
               />
             </div>
+
+            {/* 4. ECONOMÍA */}
 
             <h3>4. Condiciones económicas</h3>
 
@@ -1119,6 +1053,19 @@ export default function Contratos({ perfil, onVolver }) {
                   <option value="PEN">Soles (PEN)</option>
 
                   <option value="USD">Dólares (USD)</option>
+                </select>
+              </label>
+
+              <label className="qc-campo">
+                <span>Tratamiento del IGV</span>
+                <select
+                  value={formulario.incluye_igv ? "si" : "no"}
+                  onChange={(e) =>
+                    actualizar("incluye_igv", e.target.value === "si")
+                  }
+                >
+                  <option value="si">Incluye IGV (si corresponde)</option>
+                  <option value="no">No incluye IGV (si corresponde)</option>
                 </select>
               </label>
 
@@ -1143,32 +1090,19 @@ export default function Contratos({ perfil, onVolver }) {
                 step="0.01"
               />
 
-              <label className="qc-campo">
-                <span>Tratamiento del IGV</span>
-
-                <select
-                  value={formulario.incluye_igv ? "si" : "no"}
-                  onChange={(e) =>
-                    actualizar("incluye_igv", e.target.value === "si")
-                  }
-                >
-                  <option value="si">Incluye IGV cuando corresponda</option>
-
-                  <option value="no">No incluye IGV cuando corresponda</option>
-                </select>
-              </label>
-
               <Area
                 titulo="Forma de pago"
                 nombre="forma_pago"
                 valor={formulario.forma_pago}
                 onCambiar={actualizar}
                 requerido
-                placeholder="Adelanto, pagos parciales, saldo y fechas pactadas"
+                placeholder="Indica fechas, porcentajes, medios de pago y condiciones"
               />
             </div>
 
-            <h3>5. Plazos y entrega</h3>
+            {/* 5. FECHAS */}
+
+            <h3>5. Plazos y lugar de entrega</h3>
 
             <div className="qc-grid">
               <Campo
@@ -1203,6 +1137,8 @@ export default function Contratos({ perfil, onVolver }) {
               />
             </div>
 
+            {/* 6. CLÁUSULAS */}
+
             <h3>6. Cláusulas contractuales</h3>
 
             <div className="qc-grid">
@@ -1231,7 +1167,7 @@ export default function Contratos({ perfil, onVolver }) {
               />
 
               <Area
-                titulo="Penalidades"
+                titulo="Penalidades pactadas"
                 nombre="penalidades"
                 valor={formulario.penalidades}
                 onCambiar={actualizar}
@@ -1260,9 +1196,9 @@ export default function Contratos({ perfil, onVolver }) {
             </div>
 
             <p className="qc-aviso">
-              El contrato se guardará como borrador. Verifica la identidad de
-              las partes, facultades de representación, obligaciones y anexos
-              técnicos antes de su firma.
+              El contrato se registrará como borrador. Revisa la identidad de
+              las partes, sus facultades de representación, condiciones y anexos
+              técnicos antes de firmarlo.
             </p>
 
             <button
@@ -1277,9 +1213,7 @@ export default function Contratos({ perfil, onVolver }) {
           </form>
         )}
 
-        {/* ============================================
-            LISTADO DE CONTRATOS
-            ============================================ */}
+        {/* LISTADO */}
 
         <section className="qc-panel">
           <div className="qc-barra">
@@ -1311,34 +1245,32 @@ export default function Contratos({ perfil, onVolver }) {
               </thead>
 
               <tbody>
-                {contratosFiltrados.map((contrato) => (
-                  <tr key={contrato.id}>
-                    <td>{codigoContrato(contrato.numero)}</td>
+                {filtrados.map((c) => (
+                  <tr key={c.id}>
+                    <td>{codigo(c.numero)}</td>
 
-                    <td>{valorTexto(contrato.cliente_nombre)}</td>
+                    <td>{texto(c.cliente_nombre)}</td>
 
-                    <td>{valorTexto(contrato.proveedor_nombre)}</td>
+                    <td>{texto(c.proveedor_nombre)}</td>
 
-                    <td>{TIPOS[contrato.tipo_contrato] || "No indicado"}</td>
+                    <td>{TIPOS[c.tipo_contrato] || "No indicado"}</td>
 
-                    <td>{dinero(contrato.importe, contrato.moneda)}</td>
+                    <td>{dinero(c.importe, c.moneda)}</td>
 
                     <td>
-                      {esAdministrador ? (
+                      {esAdmin ? (
                         <select
-                          value={contrato.estado}
-                          onChange={(e) =>
-                            cambiarEstado(contrato, e.target.value)
-                          }
+                          value={c.estado}
+                          onChange={(e) => cambiarEstado(c, e.target.value)}
                         >
-                          {Object.entries(ESTADOS).map(([clave, nombre]) => (
-                            <option key={clave} value={clave}>
+                          {Object.entries(ESTADOS).map(([id, nombre]) => (
+                            <option key={id} value={id}>
                               {nombre}
                             </option>
                           ))}
                         </select>
                       ) : (
-                        ESTADOS[contrato.estado] || contrato.estado
+                        ESTADOS[c.estado] || c.estado
                       )}
                     </td>
 
@@ -1346,7 +1278,7 @@ export default function Contratos({ perfil, onVolver }) {
                       <button
                         type="button"
                         className="qc-boton"
-                        onClick={() => generarPDF(contrato)}
+                        onClick={() => generarPDF(c)}
                       >
                         <Download size={15} />
                         PDF
@@ -1359,7 +1291,7 @@ export default function Contratos({ perfil, onVolver }) {
 
             {cargando && <p className="qc-vacio">Cargando contratos...</p>}
 
-            {!cargando && contratosFiltrados.length === 0 && (
+            {!cargando && filtrados.length === 0 && (
               <p className="qc-vacio">No se encontraron contratos.</p>
             )}
           </div>
