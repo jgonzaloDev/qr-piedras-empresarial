@@ -1,50 +1,50 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { buscarClientePorRuc } from "../services/clientesRuc";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { supabase } from '../lib/supabase';
-
-const DORADO = '#d4af67';
-const FONDO = '#101114';
-const PANEL = '#1d1f23';
-const BORDE = '#66552f';
+const DORADO = "#d4af67";
+const FONDO = "#101114";
+const PANEL = "#1d1f23";
+const BORDE = "#66552f";
 
 const FORMULARIO_VACIO = {
-  nombre_razon_social: '',
-  tipo_documento: 'DNI',
-  numero_documento: '',
-  telefono: '',
-  correo: '',
-  direccion: '',
+  nombre_razon_social: "",
+  tipo_documento: "DNI",
+  numero_documento: "",
+  telefono: "",
+  correo: "",
+  direccion: "",
 };
 
-const TIPOS_DOCUMENTO = ['DNI', 'RUC', 'CE', 'PASAPORTE'];
+const TIPOS_DOCUMENTO = ["DNI", "RUC", "CE", "PASAPORTE"];
 
 function limpiarFormulario(datos = FORMULARIO_VACIO) {
   return {
-    nombre_razon_social: datos.nombre_razon_social || '',
-    tipo_documento: datos.tipo_documento || 'DNI',
-    numero_documento: datos.numero_documento || '',
-    telefono: datos.telefono || '',
-    correo: datos.correo || '',
-    direccion: datos.direccion || '',
+    nombre_razon_social: datos.nombre_razon_social || "",
+    tipo_documento: datos.tipo_documento || "DNI",
+    numero_documento: datos.numero_documento || "",
+    telefono: datos.telefono || "",
+    correo: datos.correo || "",
+    direccion: datos.direccion || "",
   };
 }
 
 function validarCliente(cliente) {
   if (!cliente.nombre_razon_social.trim()) {
-    return 'Ingresa el nombre o razón social del cliente.';
+    return "Ingresa el nombre o razón social del cliente.";
   }
 
   const documento = cliente.numero_documento.trim();
 
-  if (cliente.tipo_documento === 'DNI' && documento) {
+  if (cliente.tipo_documento === "DNI" && documento) {
     if (!/^\d{8}$/.test(documento)) {
-      return 'El DNI debe contener exactamente 8 números.';
+      return "El DNI debe contener exactamente 8 números.";
     }
   }
 
-  if (cliente.tipo_documento === 'RUC' && documento) {
+  if (cliente.tipo_documento === "RUC" && documento) {
     if (!/^\d{11}$/.test(documento)) {
-      return 'El RUC debe contener exactamente 11 números.';
+      return "El RUC debe contener exactamente 11 números.";
     }
   }
 
@@ -52,74 +52,71 @@ function validarCliente(cliente) {
     const formatoCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!formatoCorreo.test(cliente.correo.trim())) {
-      return 'Ingresa un correo electrónico válido.';
+      return "Ingresa un correo electrónico válido.";
     }
   }
 
-  return '';
+  return "";
 }
 
 const campoStyle = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '13px 14px',
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "13px 14px",
   borderRadius: 9,
-  border: '1px solid #45484e',
-  background: '#292c32',
-  color: '#ffffff',
+  border: "1px solid #45484e",
+  background: "#292c32",
+  color: "#ffffff",
   fontSize: 14,
   outlineColor: DORADO,
 };
 
 const botonPrincipal = {
-  padding: '12px 20px',
+  padding: "12px 20px",
   background: DORADO,
-  color: '#101114',
-  border: 'none',
+  color: "#101114",
+  border: "none",
   borderRadius: 9,
   fontWeight: 700,
   fontSize: 14,
-  cursor: 'pointer',
+  cursor: "pointer",
 };
 
 const botonSecundario = {
-  padding: '10px 15px',
-  background: '#303238',
-  color: '#ffffff',
-  border: '1px solid #555',
+  padding: "10px 15px",
+  background: "#303238",
+  color: "#ffffff",
+  border: "1px solid #555",
   borderRadius: 8,
-  cursor: 'pointer',
+  cursor: "pointer",
 };
 
 export default function Clientes({ onVolver, perfil }) {
   const [clientes, setClientes] = useState([]);
-  const [formulario, setFormulario] = useState(
-    { ...FORMULARIO_VACIO }
-  );
+  const [formulario, setFormulario] = useState({ ...FORMULARIO_VACIO });
 
   const [editandoId, setEditandoId] = useState(null);
-  const [busqueda, setBusqueda] = useState('');
+  const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [consultandoRuc, setConsultandoRuc] = useState(false);
   const [eliminandoId, setEliminandoId] = useState(null);
-  const [mensaje, setMensaje] = useState('');
-  const [error, setError] = useState('');
+  const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState("");
 
-  const rol = String(perfil?.rol || '').toLowerCase();
+  const rol = String(perfil?.rol || "").toLowerCase();
 
-  const puedeGestionar = [
-    'administrador',
-    'vendedor',
-  ].includes(rol);
+  const puedeGestionar = ["administrador", "vendedor"].includes(rol);
 
-  const puedeEliminar = rol === 'administrador';
+  const puedeEliminar = rol === "administrador";
 
   const cargarClientes = useCallback(async () => {
     setCargando(true);
 
     const { data, error: consultaError } = await supabase
-      .from('clientes')
-      .select(`
+      .from("clientes")
+      .select(
+        `
         id,
         nombre_razon_social,
         tipo_documento,
@@ -128,23 +125,38 @@ export default function Clientes({ onVolver, perfil }) {
         correo,
         direccion,
         creado_en
-      `)
-      .order('creado_en', { ascending: false });
+      `,
+      )
+      .order("creado_en", { ascending: false });
 
     if (consultaError) {
-      console.error('Error al consultar clientes:', consultaError);
+      console.error("Error al consultar clientes:", consultaError);
       setError(`No se pudieron cargar los clientes: ${consultaError.message}`);
     } else {
       setClientes(data || []);
-      setError('');
+      setError("");
     }
 
     setCargando(false);
   }, []);
 
-  useEffect(() => {
-    cargarClientes();
-  }, [cargarClientes]);
+ useEffect(() => {
+  let activo = true;
+
+  async function iniciarCarga() {
+    await Promise.resolve();
+
+    if (activo) {
+      await cargarClientes();
+    }
+  }
+
+  iniciarCarga();
+
+  return () => {
+    activo = false;
+  };
+}, [cargarClientes]);
 
   const clientesFiltrados = useMemo(() => {
     const texto = busqueda.trim().toLowerCase();
@@ -158,10 +170,11 @@ export default function Clientes({ onVolver, perfil }) {
         cliente.telefono,
         cliente.correo,
         cliente.direccion,
-      ]
-        .some((valor) =>
-          String(valor || '').toLowerCase().includes(texto)
-        );
+      ].some((valor) =>
+        String(valor || "")
+          .toLowerCase()
+          .includes(texto),
+      );
     });
   }, [clientes, busqueda]);
 
@@ -174,18 +187,55 @@ export default function Clientes({ onVolver, perfil }) {
     }));
   }
 
+  async function consultarRuc() {
+    const ruc = formulario.numero_documento.trim();
+    if (formulario.tipo_documento !== "RUC" || !/^\\d{11}$/.test(ruc)) {
+      setError("Selecciona RUC e ingresa exactamente 11 dígitos.");
+      return;
+    }
+    setConsultandoRuc(true);
+    setError("");
+    setMensaje("");
+    try {
+      const resultado = await buscarClientePorRuc(ruc);
+      if (resultado.existe) {
+        setFormulario(limpiarFormulario(resultado.cliente));
+        setEditandoId(resultado.cliente.id);
+        setMensaje(
+          "Este RUC ya está registrado. Se cargaron sus datos para reutilizarlos o editarlos.",
+        );
+      } else {
+        setEditandoId(null);
+        setFormulario((anterior) => ({
+          ...anterior,
+          tipo_documento: "RUC",
+          numero_documento: ruc,
+          nombre_razon_social: resultado.datos.razon_social,
+          direccion: resultado.datos.direccion || anterior.direccion,
+        }));
+        setMensaje(
+          "Datos encontrados. Revisa la dirección y pulsa Registrar cliente.",
+        );
+      }
+    } catch (err) {
+      setError(err.message || "No se pudo consultar el RUC.");
+    } finally {
+      setConsultandoRuc(false);
+    }
+  }
+
   function limpiar() {
     setFormulario({ ...FORMULARIO_VACIO });
     setEditandoId(null);
-    setError('');
-    setMensaje('');
+    setError("");
+    setMensaje("");
   }
 
   async function guardarCliente(evento) {
     evento.preventDefault();
 
     if (!puedeGestionar) {
-      setError('Tu usuario no tiene permiso para guardar clientes.');
+      setError("Tu usuario no tiene permiso para guardar clientes.");
       return;
     }
 
@@ -193,65 +243,59 @@ export default function Clientes({ onVolver, perfil }) {
 
     if (errorValidacion) {
       setError(errorValidacion);
-      setMensaje('');
+      setMensaje("");
       return;
     }
 
     setGuardando(true);
-    setError('');
-    setMensaje('');
+    setError("");
+    setMensaje("");
 
     try {
       const { data: usuarioData, error: usuarioError } =
         await supabase.auth.getUser();
 
       if (usuarioError || !usuarioData?.user) {
-        throw new Error('Tu sesión ha expirado. Vuelve a iniciar sesión.');
+        throw new Error("Tu sesión ha expirado. Vuelve a iniciar sesión.");
       }
 
       const datosCliente = {
-        nombre_razon_social:
-          formulario.nombre_razon_social.trim(),
-        tipo_documento:
-          formulario.tipo_documento,
-        numero_documento:
-          formulario.numero_documento.trim() || null,
-        telefono:
-          formulario.telefono.trim() || null,
-        correo:
-          formulario.correo.trim() || null,
-        direccion:
-          formulario.direccion.trim() || null,
+        nombre_razon_social: formulario.nombre_razon_social.trim(),
+        tipo_documento: formulario.tipo_documento,
+        numero_documento: formulario.numero_documento.trim() || null,
+        telefono: formulario.telefono.trim() || null,
+        correo: formulario.correo.trim() || null,
+        direccion: formulario.direccion.trim() || null,
       };
 
       if (editandoId) {
         const { error: actualizarError } = await supabase
-          .from('clientes')
+          .from("clientes")
           .update(datosCliente)
-          .eq('id', editandoId)
-          .select('id')
+          .eq("id", editandoId)
+          .select("id")
           .single();
 
         if (actualizarError) {
           throw actualizarError;
         }
 
-        setMensaje('Cliente actualizado correctamente.');
+        setMensaje("Cliente actualizado correctamente.");
       } else {
         const { error: insertarError } = await supabase
-          .from('clientes')
+          .from("clientes")
           .insert({
             ...datosCliente,
             creado_por: usuarioData.user.id,
           })
-          .select('id')
+          .select("id")
           .single();
 
         if (insertarError) {
           throw insertarError;
         }
 
-        setMensaje('Cliente registrado correctamente.');
+        setMensaje("Cliente registrado correctamente.");
       }
 
       setFormulario({ ...FORMULARIO_VACIO });
@@ -259,8 +303,8 @@ export default function Clientes({ onVolver, perfil }) {
 
       await cargarClientes();
     } catch (err) {
-      console.error('Error al guardar cliente:', err);
-      setError(err.message || 'Ocurrió un error al guardar el cliente.');
+      console.error("Error al guardar cliente:", err);
+      setError(err.message || "Ocurrió un error al guardar el cliente.");
     } finally {
       setGuardando(false);
     }
@@ -271,43 +315,43 @@ export default function Clientes({ onVolver, perfil }) {
 
     setFormulario(limpiarFormulario(cliente));
     setEditandoId(cliente.id);
-    setError('');
-    setMensaje('');
+    setError("");
+    setMensaje("");
 
     window.scrollTo({
       top: 0,
-      behavior: 'smooth',
+      behavior: "smooth",
     });
   }
 
   async function eliminarCliente(cliente) {
     if (!puedeEliminar) {
-      setError('Solo el administrador puede eliminar clientes.');
+      setError("Solo el administrador puede eliminar clientes.");
       return;
     }
 
     const confirmado = window.confirm(
-      `¿Seguro que deseas eliminar a "${cliente.nombre_razon_social}"?`
+      `¿Seguro que deseas eliminar a "${cliente.nombre_razon_social}"?`,
     );
 
     if (!confirmado) return;
 
     setEliminandoId(cliente.id);
-    setError('');
-    setMensaje('');
+    setError("");
+    setMensaje("");
 
     try {
       const { data, error: eliminarError } = await supabase
-        .from('clientes')
+        .from("clientes")
         .delete()
-        .eq('id', cliente.id)
-        .select('id');
+        .eq("id", cliente.id)
+        .select("id");
 
       if (eliminarError) throw eliminarError;
 
       if (!data || data.length === 0) {
         throw new Error(
-          'No se eliminó el cliente. Verifica los permisos de Supabase.'
+          "No se eliminó el cliente. Verifica los permisos de Supabase.",
         );
       }
 
@@ -316,14 +360,11 @@ export default function Clientes({ onVolver, perfil }) {
         setEditandoId(null);
       }
 
-      setMensaje('Cliente eliminado correctamente.');
+      setMensaje("Cliente eliminado correctamente.");
       await cargarClientes();
     } catch (err) {
-      console.error('Error al eliminar cliente:', err);
-      setError(
-        err.message ||
-        'No fue posible eliminar el cliente.'
-      );
+      console.error("Error al eliminar cliente:", err);
+      setError(err.message || "No fue posible eliminar el cliente.");
     } finally {
       setEliminandoId(null);
     }
@@ -332,26 +373,26 @@ export default function Clientes({ onVolver, perfil }) {
   return (
     <main
       style={{
-        minHeight: '100vh',
+        minHeight: "100vh",
         background: FONDO,
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif',
-        padding: '28px 18px 60px',
-        boxSizing: 'border-box',
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        padding: "28px 18px 60px",
+        boxSizing: "border-box",
       }}
     >
       <div
         style={{
           maxWidth: 1250,
-          margin: '0 auto',
+          margin: "0 auto",
         }}
       >
         <header
           style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
             gap: 16,
             marginBottom: 28,
           }}
@@ -371,9 +412,9 @@ export default function Clientes({ onVolver, perfil }) {
 
             <h1
               style={{
-                color: '#ffffff',
-                fontSize: 'clamp(28px, 4vw, 42px)',
-                margin: '0 0 8px',
+                color: "#ffffff",
+                fontSize: "clamp(28px, 4vw, 42px)",
+                margin: "0 0 8px",
               }}
             >
               Gestión de Clientes
@@ -381,7 +422,7 @@ export default function Clientes({ onVolver, perfil }) {
 
             <p
               style={{
-                color: '#b7b7b7',
+                color: "#b7b7b7",
                 margin: 0,
               }}
             >
@@ -392,7 +433,7 @@ export default function Clientes({ onVolver, perfil }) {
           <button
             type="button"
             onClick={() => {
-              if (typeof onVolver === 'function') {
+              if (typeof onVolver === "function") {
                 onVolver();
               }
             }}
@@ -407,9 +448,9 @@ export default function Clientes({ onVolver, perfil }) {
             role="alert"
             style={{
               padding: 15,
-              background: '#3a1f22',
-              border: '1px solid #a54851',
-              color: '#ffb6bc',
+              background: "#3a1f22",
+              border: "1px solid #a54851",
+              color: "#ffb6bc",
               borderRadius: 10,
               marginBottom: 18,
             }}
@@ -423,9 +464,9 @@ export default function Clientes({ onVolver, perfil }) {
             role="status"
             style={{
               padding: 15,
-              background: '#173529',
-              border: '1px solid #39845e',
-              color: '#b8f1cf',
+              background: "#173529",
+              border: "1px solid #39845e",
+              color: "#b8f1cf",
               borderRadius: 10,
               marginBottom: 18,
             }}
@@ -447,28 +488,23 @@ export default function Clientes({ onVolver, perfil }) {
             <h2
               style={{
                 color: DORADO,
-                margin: '0 0 22px',
+                margin: "0 0 22px",
                 fontSize: 23,
               }}
             >
-              {editandoId
-                ? 'Editar cliente'
-                : 'Registrar nuevo cliente'}
+              {editandoId ? "Editar cliente" : "Registrar nuevo cliente"}
             </h2>
 
             <form onSubmit={guardarCliente}>
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns:
-                    'repeat(auto-fit, minmax(220px, 1fr))',
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                   gap: 16,
                 }}
               >
                 <div>
-                  <label style={labelStyle}>
-                    Nombre o razón social *
-                  </label>
+                  <label style={labelStyle}>Nombre o razón social *</label>
 
                   <input
                     name="nombre_razon_social"
@@ -482,9 +518,7 @@ export default function Clientes({ onVolver, perfil }) {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    Tipo de documento
-                  </label>
+                  <label style={labelStyle}>Tipo de documento</label>
 
                   <select
                     name="tipo_documento"
@@ -501,9 +535,7 @@ export default function Clientes({ onVolver, perfil }) {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    Número de documento
-                  </label>
+                  <label style={labelStyle}>Número de documento</label>
 
                   <input
                     name="numero_documento"
@@ -511,9 +543,9 @@ export default function Clientes({ onVolver, perfil }) {
                     onChange={actualizarCampo}
                     placeholder="DNI, RUC u otro"
                     maxLength={
-                      formulario.tipo_documento === 'DNI'
+                      formulario.tipo_documento === "DNI"
                         ? 8
-                        : formulario.tipo_documento === 'RUC'
+                        : formulario.tipo_documento === "RUC"
                           ? 11
                           : 25
                     }
@@ -521,10 +553,25 @@ export default function Clientes({ onVolver, perfil }) {
                   />
                 </div>
 
+                {formulario.tipo_documento === "RUC" && (
+                  <div style={{ display: "flex", alignItems: "end" }}>
+                    <button
+                      type="button"
+                      onClick={consultarRuc}
+                      disabled={consultandoRuc || guardando}
+                      style={{
+                        ...botonPrincipal,
+                        width: "100%",
+                        opacity: consultandoRuc ? 0.6 : 1,
+                      }}
+                    >
+                      {consultandoRuc ? "Consultando RUC..." : "Buscar RUC"}
+                    </button>
+                  </div>
+                )}
+
                 <div>
-                  <label style={labelStyle}>
-                    Teléfono
-                  </label>
+                  <label style={labelStyle}>Teléfono</label>
 
                   <input
                     name="telefono"
@@ -538,9 +585,7 @@ export default function Clientes({ onVolver, perfil }) {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    Correo electrónico
-                  </label>
+                  <label style={labelStyle}>Correo electrónico</label>
 
                   <input
                     name="correo"
@@ -554,9 +599,7 @@ export default function Clientes({ onVolver, perfil }) {
                 </div>
 
                 <div>
-                  <label style={labelStyle}>
-                    Dirección
-                  </label>
+                  <label style={labelStyle}>Dirección</label>
 
                   <input
                     name="direccion"
@@ -571,8 +614,8 @@ export default function Clientes({ onVolver, perfil }) {
 
               <div
                 style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
+                  display: "flex",
+                  flexWrap: "wrap",
                   gap: 12,
                   marginTop: 24,
                 }}
@@ -586,20 +629,14 @@ export default function Clientes({ onVolver, perfil }) {
                   }}
                 >
                   {guardando
-                    ? 'Guardando...'
+                    ? "Guardando..."
                     : editandoId
-                      ? 'Guardar cambios'
-                      : 'Registrar cliente'}
+                      ? "Guardar cambios"
+                      : "Registrar cliente"}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={limpiar}
-                  style={botonSecundario}
-                >
-                  {editandoId
-                    ? 'Cancelar edición'
-                    : 'Limpiar formulario'}
+                <button type="button" onClick={limpiar} style={botonSecundario}>
+                  {editandoId ? "Cancelar edición" : "Limpiar formulario"}
                 </button>
               </div>
             </form>
@@ -616,10 +653,10 @@ export default function Clientes({ onVolver, perfil }) {
         >
           <div
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
               gap: 16,
               marginBottom: 22,
             }}
@@ -629,7 +666,7 @@ export default function Clientes({ onVolver, perfil }) {
                 style={{
                   color: DORADO,
                   fontSize: 23,
-                  margin: '0 0 8px',
+                  margin: "0 0 8px",
                 }}
               >
                 Clientes registrados ({clientes.length})
@@ -637,7 +674,7 @@ export default function Clientes({ onVolver, perfil }) {
 
               <p
                 style={{
-                  color: '#aeb1b8',
+                  color: "#aeb1b8",
                   fontSize: 13,
                   margin: 0,
                 }}
@@ -652,7 +689,7 @@ export default function Clientes({ onVolver, perfil }) {
               style={botonSecundario}
               disabled={cargando}
             >
-              {cargando ? 'Actualizando...' : '↻ Actualizar'}
+              {cargando ? "Actualizando..." : "↻ Actualizar"}
             </button>
           </div>
 
@@ -671,66 +708,48 @@ export default function Clientes({ onVolver, perfil }) {
 
           <div
             style={{
-              overflowX: 'auto',
+              overflowX: "auto",
               borderRadius: 10,
-              border: '1px solid #35383d',
+              border: "1px solid #35383d",
             }}
           >
             <table
               style={{
-                width: '100%',
-                borderCollapse: 'collapse',
+                width: "100%",
+                borderCollapse: "collapse",
                 minWidth: 850,
-                textAlign: 'left',
+                textAlign: "left",
               }}
             >
               <thead
                 style={{
-                  background: '#292c32',
+                  background: "#292c32",
                   color: DORADO,
                 }}
               >
                 <tr>
-                  <th style={celdaEncabezado}>
-                    Cliente
-                  </th>
-                  <th style={celdaEncabezado}>
-                    Documento
-                  </th>
-                  <th style={celdaEncabezado}>
-                    Teléfono
-                  </th>
-                  <th style={celdaEncabezado}>
-                    Correo
-                  </th>
-                  <th style={celdaEncabezado}>
-                    Dirección
-                  </th>
-                  <th style={celdaEncabezado}>
-                    Acciones
-                  </th>
+                  <th style={celdaEncabezado}>Cliente</th>
+                  <th style={celdaEncabezado}>Documento</th>
+                  <th style={celdaEncabezado}>Teléfono</th>
+                  <th style={celdaEncabezado}>Correo</th>
+                  <th style={celdaEncabezado}>Dirección</th>
+                  <th style={celdaEncabezado}>Acciones</th>
                 </tr>
               </thead>
 
               <tbody>
                 {cargando ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      style={celdaVacia}
-                    >
+                    <td colSpan={6} style={celdaVacia}>
                       Cargando clientes...
                     </td>
                   </tr>
                 ) : clientesFiltrados.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      style={celdaVacia}
-                    >
+                    <td colSpan={6} style={celdaVacia}>
                       {busqueda
-                        ? 'No se encontraron clientes con esa búsqueda.'
-                        : 'Todavía no hay clientes registrados.'}
+                        ? "No se encontraron clientes con esa búsqueda."
+                        : "Todavía no hay clientes registrados."}
                     </td>
                   </tr>
                 ) : (
@@ -738,38 +757,30 @@ export default function Clientes({ onVolver, perfil }) {
                     <tr
                       key={cliente.id}
                       style={{
-                        borderTop: '1px solid #383b40',
+                        borderTop: "1px solid #383b40",
                       }}
                     >
                       <td style={celdaStyle}>
-                        <strong>
-                          {cliente.nombre_razon_social}
-                        </strong>
+                        <strong>{cliente.nombre_razon_social}</strong>
                       </td>
 
                       <td style={celdaStyle}>
-                        {cliente.tipo_documento || '—'}
+                        {cliente.tipo_documento || "—"}
                         {cliente.numero_documento
                           ? `: ${cliente.numero_documento}`
-                          : ''}
+                          : ""}
                       </td>
 
-                      <td style={celdaStyle}>
-                        {cliente.telefono || '—'}
-                      </td>
+                      <td style={celdaStyle}>{cliente.telefono || "—"}</td>
 
-                      <td style={celdaStyle}>
-                        {cliente.correo || '—'}
-                      </td>
+                      <td style={celdaStyle}>{cliente.correo || "—"}</td>
 
-                      <td style={celdaStyle}>
-                        {cliente.direccion || '—'}
-                      </td>
+                      <td style={celdaStyle}>{cliente.direccion || "—"}</td>
 
                       <td style={celdaStyle}>
                         <div
                           style={{
-                            display: 'flex',
+                            display: "flex",
                             gap: 8,
                           }}
                         >
@@ -779,7 +790,7 @@ export default function Clientes({ onVolver, perfil }) {
                               onClick={() => editarCliente(cliente)}
                               style={{
                                 ...botonPrincipal,
-                                padding: '9px 12px',
+                                padding: "9px 12px",
                               }}
                             >
                               Editar
@@ -793,21 +804,19 @@ export default function Clientes({ onVolver, perfil }) {
                               disabled={eliminandoId === cliente.id}
                               style={{
                                 ...botonSecundario,
-                                padding: '9px 12px',
-                                color: '#ffb6bc',
-                                borderColor: '#a54851',
+                                padding: "9px 12px",
+                                color: "#ffb6bc",
+                                borderColor: "#a54851",
                               }}
                             >
                               {eliminandoId === cliente.id
-                                ? 'Eliminando...'
-                                : 'Eliminar'}
+                                ? "Eliminando..."
+                                : "Eliminar"}
                             </button>
                           )}
 
                           {!puedeGestionar && (
-                            <span style={{ color: '#aaa' }}>
-                              Solo lectura
-                            </span>
+                            <span style={{ color: "#aaa" }}>Solo lectura</span>
                           )}
                         </div>
                       </td>
@@ -820,7 +829,7 @@ export default function Clientes({ onVolver, perfil }) {
 
           <p
             style={{
-              color: '#aeb1b8',
+              color: "#aeb1b8",
               fontSize: 13,
               marginTop: 16,
             }}
@@ -831,8 +840,8 @@ export default function Clientes({ onVolver, perfil }) {
 
         <footer
           style={{
-            textAlign: 'center',
-            color: '#777b82',
+            textAlign: "center",
+            color: "#777b82",
             fontSize: 12,
             marginTop: 30,
           }}
@@ -845,28 +854,28 @@ export default function Clientes({ onVolver, perfil }) {
 }
 
 const labelStyle = {
-  display: 'block',
-  color: '#e0e0e0',
+  display: "block",
+  color: "#e0e0e0",
   fontSize: 13,
   fontWeight: 600,
   marginBottom: 8,
 };
 
 const celdaEncabezado = {
-  padding: '15px 13px',
+  padding: "15px 13px",
   fontSize: 14,
-  whiteSpace: 'nowrap',
+  whiteSpace: "nowrap",
 };
 
 const celdaStyle = {
-  padding: '15px 13px',
+  padding: "15px 13px",
   fontSize: 13,
-  color: '#eeeeee',
-  verticalAlign: 'middle',
+  color: "#eeeeee",
+  verticalAlign: "middle",
 };
 
 const celdaVacia = {
   padding: 35,
-  textAlign: 'center',
-  color: '#b8bbc0',
+  textAlign: "center",
+  color: "#b8bbc0",
 };
