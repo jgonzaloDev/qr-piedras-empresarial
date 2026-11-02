@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 import {
@@ -20,9 +21,10 @@ import Clientes from "./Clientes";
 import Cotizaciones from "./Cotizaciones";
 import Ventas from "./Ventas";
 import Pagos from "./Pagos";
+import Contratos from "./Contratos";
 
 // =====================================================
-// MÓDULOS EMPRESARIALES
+// CONFIGURACIÓN DE LOS MÓDULOS
 // =====================================================
 
 const MODULOS = [
@@ -50,28 +52,29 @@ const MODULOS = [
   {
     id: "ventas",
     nombre: "Ventas",
-    descripcion: "Registro y seguimiento de operaciones.",
+    descripcion: "Registro y seguimiento de operaciones comerciales.",
     icono: ShoppingCart,
     disponible: true,
   },
   {
     id: "pagos",
     nombre: "Pagos",
-    descripcion: "Control de pagos, adelantos y saldos.",
+    descripcion: "Control de pagos, adelantos, saldos y reportes.",
     icono: Wallet,
     disponible: true,
   },
   {
     id: "contratos",
     nombre: "Contratos",
-    descripcion: "Gestión de acuerdos comerciales.",
+    descripcion:
+      "Contratos profesionales, documentos PDF y acuerdos comerciales.",
     icono: FileSignature,
-    disponible: false,
+    disponible: true,
   },
 ];
 
 // =====================================================
-// COLORES DEL SISTEMA
+// COLORES CORPORATIVOS
 // =====================================================
 
 const COLORES = {
@@ -99,6 +102,7 @@ export default function Dashboard({ perfil, onLogout }) {
   function navegar(destino) {
     setModulo(destino);
     setMenuAbierto(false);
+    window.scrollTo(0, 0);
   }
 
   // ===================================================
@@ -106,25 +110,59 @@ export default function Dashboard({ perfil, onLogout }) {
   // ===================================================
 
   if (modulo === "clientes") {
-    return <Clientes perfil={perfil} onVolver={() => navegar("inicio")} />;
+    return (
+      <Clientes
+        perfil={perfil}
+        onVolver={() => navegar("inicio")}
+      />
+    );
   }
 
   if (modulo === "cotizaciones") {
-    return <Cotizaciones perfil={perfil} onVolver={() => navegar("inicio")} />;
+    return (
+      <Cotizaciones
+        perfil={perfil}
+        onVolver={() => navegar("inicio")}
+      />
+    );
   }
 
   if (modulo === "ventas") {
-    return <Ventas onVolver={() => navegar("inicio")} />;
+    return (
+      <Ventas
+        onVolver={() => navegar("inicio")}
+      />
+    );
   }
 
   if (modulo === "pagos") {
-    return <Pagos perfil={perfil} onVolver={() => navegar("inicio")} />;
+    return (
+      <Pagos
+        perfil={perfil}
+        onVolver={() => navegar("inicio")}
+      />
+    );
   }
 
-  const moduloActual = MODULOS.find((item) => item.id === modulo);
+  // ===================================================
+  // NUEVO MÓDULO: CONTRATOS
+  // ===================================================
+
+  if (modulo === "contratos") {
+    return (
+      <Contratos
+        perfil={perfil}
+        onVolver={() => navegar("inicio")}
+      />
+    );
+  }
+
+  const moduloActual = MODULOS.find(
+    (item) => item.id === modulo
+  );
 
   // ===================================================
-  // ESTILO DE LOS BOTONES DEL MENÚ
+  // ESTILOS DE BOTONES DEL MENÚ
   // ===================================================
 
   const estiloBotonMenu = (activo) => ({
@@ -137,16 +175,21 @@ export default function Dashboard({ perfil, onLogout }) {
       ? "1px solid rgba(212,175,103,0.35)"
       : "1px solid transparent",
     borderRadius: 10,
-    background: activo ? "rgba(212,175,103,0.12)" : "transparent",
-    color: activo ? COLORES.dorado : COLORES.secundario,
+    background: activo
+      ? "rgba(212,175,103,0.12)"
+      : "transparent",
+    color: activo
+      ? COLORES.dorado
+      : COLORES.secundario,
     fontSize: 14,
     fontWeight: activo ? 700 : 500,
     textAlign: "left",
     cursor: "pointer",
+    transition: "0.2s ease",
   });
 
   // ===================================================
-  // INTERFAZ
+  // INTERFAZ DEL DASHBOARD
   // ===================================================
 
   return (
@@ -154,7 +197,7 @@ export default function Dashboard({ perfil, onLogout }) {
       <style>{`
 
         /* ============================================
-           CONFIGURACIÓN GLOBAL DEL DASHBOARD
+           CONFIGURACIÓN GLOBAL
            ============================================ */
 
         .qr-dashboard,
@@ -196,14 +239,12 @@ export default function Dashboard({ perfil, onLogout }) {
           min-height: 100vh;
 
           background: ${COLORES.panel};
-
           border-right: 1px solid ${COLORES.borde};
 
           padding: 28px 18px;
 
           display: flex;
           flex-direction: column;
-
           gap: 25px;
         }
 
@@ -244,7 +285,6 @@ export default function Dashboard({ perfil, onLogout }) {
 
           font-size: 11px;
           font-weight: bold;
-
           letter-spacing: 1.5px;
 
           padding: 0 14px;
@@ -257,9 +297,12 @@ export default function Dashboard({ perfil, onLogout }) {
           gap: 5px;
         }
 
+        .qr-menu-items button:hover:not(:disabled) {
+          background: rgba(212,175,103,0.08) !important;
+        }
+
         /* ============================================
            CONTENIDO PRINCIPAL
-           PANTALLA COMPLETA
            ============================================ */
 
         .qr-main {
@@ -310,7 +353,7 @@ export default function Dashboard({ perfil, onLogout }) {
         }
 
         /* ============================================
-           USUARIO ADMINISTRADOR
+           USUARIO AUTENTICADO
            ============================================ */
 
         .qr-user {
@@ -381,12 +424,9 @@ export default function Dashboard({ perfil, onLogout }) {
           width: 100%;
 
           display: grid;
-
-          grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
 
           gap: 18px;
-
           margin-bottom: 34px;
         }
 
@@ -399,7 +439,6 @@ export default function Dashboard({ perfil, onLogout }) {
           border-radius: 14px;
 
           padding: 22px;
-
           text-align: center;
         }
 
@@ -413,7 +452,6 @@ export default function Dashboard({ perfil, onLogout }) {
 
         .qr-summary-card strong {
           font-size: 22px;
-
           color: ${COLORES.blanco};
         }
 
@@ -428,7 +466,6 @@ export default function Dashboard({ perfil, onLogout }) {
           margin-bottom: 20px;
 
           color: ${COLORES.blanco};
-
           text-align: center;
         }
 
@@ -440,9 +477,7 @@ export default function Dashboard({ perfil, onLogout }) {
           width: 100%;
 
           display: grid;
-
-          grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
 
           gap: 18px;
         }
@@ -462,7 +497,6 @@ export default function Dashboard({ perfil, onLogout }) {
           border-radius: 15px;
 
           padding: 25px;
-
           text-align: left;
 
           color: ${COLORES.blanco};
@@ -471,7 +505,6 @@ export default function Dashboard({ perfil, onLogout }) {
           flex-direction: column;
 
           cursor: pointer;
-
           transition: 0.2s ease;
 
           font: inherit;
@@ -511,7 +544,6 @@ export default function Dashboard({ perfil, onLogout }) {
           margin: 0 0 9px;
 
           font-size: 18px;
-
           color: ${COLORES.blanco};
         }
 
@@ -533,7 +565,6 @@ export default function Dashboard({ perfil, onLogout }) {
           align-items: center;
 
           font-size: 12px;
-
           color: ${COLORES.dorado};
         }
 
@@ -560,7 +591,6 @@ export default function Dashboard({ perfil, onLogout }) {
           color: #e6a0a0;
 
           cursor: pointer;
-
           font-weight: 600;
         }
 
@@ -578,11 +608,9 @@ export default function Dashboard({ perfil, onLogout }) {
           border: 1px solid ${COLORES.borde};
 
           background: ${COLORES.panel};
-
           color: ${COLORES.dorado};
 
           border-radius: 8px;
-
           padding: 9px;
 
           cursor: pointer;
@@ -598,8 +626,7 @@ export default function Dashboard({ perfil, onLogout }) {
 
         @media (max-width: 1100px) {
           .qr-grid {
-            grid-template-columns:
-              repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
           .qr-main {
@@ -626,7 +653,6 @@ export default function Dashboard({ perfil, onLogout }) {
             z-index: 30;
 
             transform: translateX(-100%);
-
             transition: transform 0.2s ease;
 
             overflow-y: auto;
@@ -654,7 +680,6 @@ export default function Dashboard({ perfil, onLogout }) {
           .qr-main {
             width: 100%;
             min-width: 0;
-
             padding: 18px;
           }
 
@@ -709,14 +734,18 @@ export default function Dashboard({ perfil, onLogout }) {
           MENÚ LATERAL
           ============================================= */}
 
-      <aside className={`qr-sidebar ${menuAbierto ? "open" : ""}`}>
+      <aside
+        className={`qr-sidebar ${menuAbierto ? "open" : ""}`}
+      >
         <div className="qr-logo">
           <h1>QR PIEDRAS</h1>
           <p>Sistema de Gestión Empresarial</p>
         </div>
 
         <nav aria-label="Menú principal">
-          <div className="qr-menu-label">NAVEGACIÓN</div>
+          <div className="qr-menu-label">
+            NAVEGACIÓN
+          </div>
 
           <div className="qr-menu-items">
             <button
@@ -738,7 +767,9 @@ export default function Dashboard({ perfil, onLogout }) {
                   style={{
                     ...estiloBotonMenu(modulo === item.id),
                     opacity: item.disponible ? 1 : 0.55,
-                    cursor: item.disponible ? "pointer" : "not-allowed",
+                    cursor: item.disponible
+                      ? "pointer"
+                      : "not-allowed",
                   }}
                   onClick={() => navegar(item.id)}
                   disabled={!item.disponible}
@@ -756,7 +787,11 @@ export default function Dashboard({ perfil, onLogout }) {
           </div>
         </nav>
 
-        <button type="button" className="qr-logout" onClick={onLogout}>
+        <button
+          type="button"
+          className="qr-logout"
+          onClick={onLogout}
+        >
           <LogOut size={18} />
           Cerrar sesión
         </button>
@@ -767,6 +802,7 @@ export default function Dashboard({ perfil, onLogout }) {
           ============================================= */}
 
       <main className="qr-main">
+
         {/* BARRA SUPERIOR */}
 
         <header className="qr-topbar">
@@ -783,7 +819,11 @@ export default function Dashboard({ perfil, onLogout }) {
               onClick={() => setMenuAbierto(!menuAbierto)}
               aria-label="Abrir menú"
             >
-              {menuAbierto ? <X size={20} /> : <Menu size={20} />}
+              {menuAbierto ? (
+                <X size={20} />
+              ) : (
+                <Menu size={20} />
+              )}
             </button>
 
             <div>
@@ -792,10 +832,12 @@ export default function Dashboard({ perfil, onLogout }) {
             </div>
           </div>
 
-          {/* DATOS DEL ADMINISTRADOR */}
+          {/* DATOS DEL USUARIO */}
 
           <div className="qr-user">
-            <div className="qr-avatar">{nombre.charAt(0).toUpperCase()}</div>
+            <div className="qr-avatar">
+              {nombre.charAt(0).toUpperCase()}
+            </div>
 
             <div>
               <div
@@ -818,7 +860,10 @@ export default function Dashboard({ perfil, onLogout }) {
               </div>
             </div>
 
-            <ShieldCheck size={20} color={COLORES.dorado} />
+            <ShieldCheck
+              size={20}
+              color={COLORES.dorado}
+            />
           </div>
         </header>
 
@@ -828,14 +873,16 @@ export default function Dashboard({ perfil, onLogout }) {
 
         {modulo === "inicio" ? (
           <>
+            {/* BIENVENIDA */}
+
             <section className="qr-welcome">
               <h2>
                 Bienvenido, <span>{nombre}</span>
               </h2>
 
               <p>
-                Administra las operaciones comerciales de QR PIEDRAS desde un
-                solo lugar.
+                Administra las operaciones comerciales
+                de QR PIEDRAS desde un solo lugar.
               </p>
             </section>
 
@@ -849,7 +896,13 @@ export default function Dashboard({ perfil, onLogout }) {
 
               <div className="qr-summary-card">
                 <p>Módulos disponibles</p>
-                <strong>{MODULOS.filter((m) => m.disponible).length}</strong>
+                <strong>
+                  {
+                    MODULOS.filter(
+                      (m) => m.disponible
+                    ).length
+                  }
+                </strong>
               </div>
 
               <div className="qr-summary-card">
@@ -871,10 +924,14 @@ export default function Dashboard({ perfil, onLogout }) {
               </div>
             </section>
 
-            {/* MÓDULOS EMPRESARIALES */}
+            {/* ===========================================
+                MÓDULOS EMPRESARIALES
+                =========================================== */}
 
             <section>
-              <h2 className="qr-section-title">Módulos empresariales</h2>
+              <h2 className="qr-section-title">
+                Módulos empresariales
+              </h2>
 
               <div className="qr-grid">
                 {MODULOS.map((item) => {
@@ -898,7 +955,9 @@ export default function Dashboard({ perfil, onLogout }) {
 
                       <div className="qr-module-footer">
                         <span>
-                          {item.disponible ? "Disponible" : "Próximamente"}
+                          {item.disponible
+                            ? "Disponible"
+                            : "Próximamente"}
                         </span>
 
                         {item.disponible ? (
@@ -915,9 +974,13 @@ export default function Dashboard({ perfil, onLogout }) {
           </>
         ) : (
           <section className="qr-welcome">
-            <h2>{moduloActual?.nombre || "Módulo"}</h2>
+            <h2>
+              {moduloActual?.nombre || "Módulo"}
+            </h2>
 
-            <p>Este módulo estará disponible próximamente.</p>
+            <p>
+              Este módulo estará disponible próximamente.
+            </p>
           </section>
         )}
       </main>

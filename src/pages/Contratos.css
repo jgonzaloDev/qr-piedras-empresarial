@@ -1,0 +1,279 @@
+.qc-pagina,
+.qc-pagina * {
+  box-sizing: border-box;
+}
+
+.qc-pagina {
+  min-height: 100vh;
+  background: #101114;
+  color: #f5f5f5;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 30px;
+}
+
+.qc-contenedor {
+  max-width: 1600px;
+  margin: auto;
+}
+
+.qc-encabezado,
+.qc-acciones,
+.qc-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.qc-encabezado {
+  margin-bottom: 25px;
+}
+
+.qc-encabezado h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 27px;
+  color: #d4af67;
+  margin: 15px 0 8px;
+}
+
+.qc-encabezado p {
+  color: #aeb1b8;
+  margin: 0;
+  font-size: 14px;
+}
+
+.qc-volver {
+  border: none;
+  background: transparent;
+  color: #d4af67;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.qc-boton {
+  border: 1px solid #504735;
+  background: #26282c;
+  color: #f5f5f5;
+  border-radius: 9px;
+  padding: 11px 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.qc-boton:hover {
+  border-color: #d4af67;
+}
+
+.qc-primario {
+  background: #d4af67;
+  color: #101114;
+  border-color: #d4af67;
+  font-weight: 700;
+}
+
+.qc-boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qc-indicadores {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.qc-indicadores > div,
+.qc-panel {
+  background: #1b1d21;
+  border: 1px solid #39342b;
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.qc-indicadores span {
+  display: block;
+  font-size: 13px;
+  color: #aeb1b8;
+  margin-bottom: 12px;
+}
+
+.qc-indicadores strong {
+  font-size: 28px;
+  color: #d4af67;
+}
+
+.qc-panel {
+  margin-bottom: 24px;
+}
+
+.qc-panel h2 {
+  font-size: 19px;
+  margin: 0 0 20px;
+}
+
+.qc-panel h3 {
+  font-size: 15px;
+  color: #d4af67;
+  margin: 28px 0 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #39342b;
+}
+
+.qc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.qc-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.qc-campo span {
+  font-size: 13px;
+  color: #d8d8d8;
+}
+
+.qc-campo input,
+.qc-campo select,
+.qc-campo textarea,
+.qc-tabla select,
+.qc-busqueda input {
+  background: #111215;
+  color: #f5f5f5;
+  border: 1px solid #45403a;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 13px;
+  width: 100%;
+}
+
+.qc-campo textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.qc-campo input:focus,
+.qc-campo select:focus,
+.qc-campo textarea:focus {
+  outline: 1px solid #d4af67;
+}
+
+.qc-ancho {
+  grid-column: 1 / -1;
+}
+
+.qc-aviso {
+  font-size: 12px;
+  color: #b9b2a6;
+  line-height: 1.6;
+  margin: 22px 0;
+}
+
+.qc-mensaje {
+  background: #282419;
+  border: 1px solid #6b5731;
+  color: #e8cc93;
+  padding: 13px;
+  border-radius: 9px;
+  margin-bottom: 18px;
+}
+
+.qc-barra {
+  margin-bottom: 20px;
+}
+
+.qc-barra h2 {
+  margin: 0;
+}
+
+.qc-busqueda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 260px;
+  color: #d4af67;
+}
+
+.qc-tabla-scroll {
+  overflow-x: auto;
+}
+
+.qc-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1050px;
+  font-size: 13px;
+}
+
+.qc-tabla th,
+.qc-tabla td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #36342f;
+  vertical-align: middle;
+}
+
+.qc-tabla th {
+  color: #d4af67;
+  font-weight: 600;
+}
+
+.qc-tabla td {
+  color: #e4e4e4;
+}
+
+.qc-tabla select {
+  min-width: 110px;
+}
+
+.qc-vacio {
+  text-align: center;
+  padding: 25px;
+  color: #aeb1b8;
+}
+
+@media (max-width: 900px) {
+  .qc-indicadores {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .qc-pagina {
+    padding: 15px;
+  }
+
+  .qc-grid,
+  .qc-indicadores {
+    grid-template-columns: 1fr;
+  }
+
+  .qc-panel {
+    padding: 16px;
+  }
+
+  .qc-encabezado h1 {
+    font-size: 23px;
+  }
+
+  .qc-busqueda {
+    width: 100%;
+    min-width: 0;
+  }
+}
